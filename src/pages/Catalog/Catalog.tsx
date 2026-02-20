@@ -201,6 +201,12 @@ const keyTypeVisualHints = [
     image: '/images/chaves/automotivas/chave-canivete.svg',
   },
   {
+    title: 'Chave presencial',
+    value: 'Chave presencial (de presença)',
+    description: 'Modelo de presença (keyless), normalmente usado por aproximação.',
+    image: '/images/chaves/automotivas/chave-presencial.svg',
+  },
+  {
     title: 'Chave fura bolso',
     value: 'Chave com telecomando não canivete (fura bolso)',
     description: 'Controle com botões, mas sem lâmina retrátil (formato tradicional).',
@@ -664,8 +670,8 @@ const Catalog: React.FC = () => {
                 <MenuItem value="">Prefiro informar no atendimento</MenuItem>
                 <MenuItem value="Chave simples (sem telecomando)">Chave simples (sem telecomando)</MenuItem>
                 <MenuItem value="Chave com telecomando canivete">Chave com telecomando canivete</MenuItem>
+                <MenuItem value="Chave presencial (de presença)">Chave presencial (de presença)</MenuItem>
                 <MenuItem value="Chave com telecomando não canivete (fura bolso)">Chave com telecomando não canivete (fura bolso)</MenuItem>
-                <MenuItem value="Chave fura bolso">Chave fura bolso</MenuItem>
                 <MenuItem value="Telecomando separado da chave (tipo chaveiro)">Telecomando separado da chave (tipo chaveiro)</MenuItem>
                 <MenuItem value="Não sei informar">Não sei informar</MenuItem>
               </Select>
