@@ -16,7 +16,6 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
-  Slider,
   Checkbox,
   FormControlLabel,
   Paper,
@@ -68,7 +67,7 @@ const automotiveKeys = [
     id: 1,
     title: 'Nissan Sentra',
     manufacturer: 'Nissan',
-    type: 'Presencial',
+    type: 'Chave presencial (de presença)',
     year: 2018,
     yearRange: '2016 - 2020',
     price: 280.00,
@@ -80,7 +79,7 @@ const automotiveKeys = [
     id: 2,
     title: 'Honda Civic',
     manufacturer: 'Honda',
-    type: 'Canivete',
+    type: 'Chave com telecomando canivete',
     year: 2017,
     yearRange: '2014 - 2019',
     price: 320.00,
@@ -92,7 +91,7 @@ const automotiveKeys = [
     id: 3,
     title: 'Toyota Corolla',
     manufacturer: 'Toyota',
-    type: 'Chave Magnética',
+    type: 'Chave com telecomando não canivete (fura bolso)',
     year: 2019,
     yearRange: '2017 - 2021',
     price: 350.00,
@@ -104,7 +103,7 @@ const automotiveKeys = [
     id: 4,
     title: 'Volkswagen Gol',
     manufacturer: 'Volkswagen',
-    type: 'Presencial',
+    type: 'Chave simples (sem telecomando)',
     year: 2015,
     yearRange: '2013 - 2017',
     price: 250.00,
@@ -116,7 +115,7 @@ const automotiveKeys = [
     id: 5,
     title: 'Fiat Palio',
     manufacturer: 'Fiat',
-    type: 'Canivete',
+    type: 'Chave com telecomando canivete',
     year: 2016,
     yearRange: '2014 - 2018',
     price: 230.00,
@@ -128,7 +127,7 @@ const automotiveKeys = [
     id: 6,
     title: 'Chevrolet Onix',
     manufacturer: 'Chevrolet',
-    type: 'Chave Magnética',
+    type: 'Telecomando separado da chave (tipo chaveiro)',
     year: 2020,
     yearRange: '2019 - 2023',
     price: 380.00,
@@ -138,17 +137,73 @@ const automotiveKeys = [
   },
 ];
 
-// Available manufacturers from the data
-const manufacturers = Array.from(new Set(automotiveKeys.map(key => key.manufacturer))).sort();
+const manufacturers = [
+  'Toyota',
+  'Honda',
+  'Nissan',
+  'Subaru',
+  'Mitsubishi Motors',
+  'Suzuki',
+  'Lexus',
+  'Infiniti',
+  'Acura',
+  'Volkswagen',
+  'BMW',
+  'Mercedes-Benz',
+  'Audi',
+  'Porsche',
+  'Opel',
+  'Ford',
+  'Chevrolet',
+  'Tesla',
+  'Jeep',
+  'Cadillac',
+  'Chrysler',
+  'Dodge',
+  'Ram',
+  'GMC',
+  'Buick',
+  'Hyundai',
+  'Kia',
+  'Peugeot',
+  'Citroën',
+  'Renault',
+  'Fiat',
+  'Alfa Romeo',
+  'Volvo',
+  'Skoda',
+  'SEAT',
+  'Mini',
+  'Jaguar',
+  'Land Rover',
+  'BYD',
+  'Chery',
+  'Geely',
+  'Great Wall Motors - GWM',
+  'Haval',
+  'JAC Motors',
+  'Troller',
+  'GAC',
+].sort();
 
-// Available key types from the data
-const keyTypes = ['Presencial', 'Canivete', 'Chave Magnética'];
+const keyTypes = [
+  'Chave simples (sem telecomando)',
+  'Chave com telecomando canivete',
+  'Chave presencial (de presença)',
+  'Chave com telecomando não canivete (fura bolso)',
+  'Telecomando separado da chave (tipo chaveiro)',
+];
 
-// Year range for the slider
+// Year range for the filter
 const yearRange = {
   min: Math.min(...automotiveKeys.map(key => key.year)),
   max: Math.max(...automotiveKeys.map(key => key.year))
 };
+
+const yearOptions = Array.from(
+  { length: yearRange.max - yearRange.min + 1 },
+  (_, index) => yearRange.max - index
+);
 
 
 
@@ -255,7 +310,6 @@ const buildCatalogWhatsAppMessage = (key: AutomotiveKey, questionnaire: CatalogQ
     optionalAnswers.length > 0 ? 'Informações adicionais (opcional):' : 'Informações adicionais: cliente preferiu informar no atendimento.',
     ...optionalAnswers,
     '',
-    'Se necessário, também posso enviar foto da chave ou do painel para facilitar a identificação.',
   ].join('\n');
 
   return `https://wa.me/5521998063214?text=${encodeURIComponent(message)}`;
@@ -285,9 +339,22 @@ const Catalog: React.FC = () => {
     setSelectedKeyTypes(typeof value === 'string' ? value.split(',') : value);
   };
 
-  // Handle year range change
-  const handleYearRangeChange = (event: Event, newValue: number | number[]) => {
-    setYearRangeValue(newValue as number[]);
+  const handleYearFromChange = (event: SelectChangeEvent<string>) => {
+    const selectedFromYear = Number(event.target.value);
+
+    setYearRangeValue(([currentFromYear, currentToYear]) => {
+      const nextFromYear = Number.isNaN(selectedFromYear) ? currentFromYear : selectedFromYear;
+      return [nextFromYear, Math.max(nextFromYear, currentToYear)];
+    });
+  };
+
+  const handleYearToChange = (event: SelectChangeEvent<string>) => {
+    const selectedToYear = Number(event.target.value);
+
+    setYearRangeValue(([currentFromYear, currentToYear]) => {
+      const nextToYear = Number.isNaN(selectedToYear) ? currentToYear : selectedToYear;
+      return [Math.min(currentFromYear, nextToYear), nextToYear];
+    });
   };
 
 
@@ -466,17 +533,41 @@ const Catalog: React.FC = () => {
 
               {/* Year Range Filter */}
               <Box sx={{ flex: '2 1 400px' }}>
-                <Box>
-                  <Typography gutterBottom>Ano do Veículo: {yearRangeValue[0]} - {yearRangeValue[1]}</Typography>
-                  <Slider
-                    value={yearRangeValue}
-                    onChange={handleYearRangeChange}
-                    valueLabelDisplay="auto"
-                    min={yearRange.min}
-                    max={yearRange.max}
-                    step={1}
-                  />
-                </Box>
+                <Typography sx={{ mb: 1 }}>Ano do veículo</Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <FormControl fullWidth>
+                    <InputLabel>De</InputLabel>
+                    <Select
+                      value={String(yearRangeValue[0])}
+                      label="De"
+                      onChange={handleYearFromChange}
+                    >
+                      {yearOptions.map((year) => (
+                        <MenuItem key={`from-${year}`} value={String(year)}>
+                          {year}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Até</InputLabel>
+                    <Select
+                      value={String(yearRangeValue[1])}
+                      label="Até"
+                      onChange={handleYearToChange}
+                    >
+                      {yearOptions.map((year) => (
+                        <MenuItem key={`to-${year}`} value={String(year)}>
+                          {year}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Intervalo selecionado: {yearRangeValue[0]} até {yearRangeValue[1]}
+                </Typography>
               </Box>
 
 
@@ -532,12 +623,31 @@ const Catalog: React.FC = () => {
                     {key.title}
                   </Typography>
                   
-                  <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    justifyContent="center"
+                    sx={{
+                      mb: 2,
+                      flexWrap: 'wrap',
+                      rowGap: 1,
+                    }}
+                  >
                     <Chip 
                       label={key.type} 
                       size="small" 
                       color="primary" 
-                      variant="outlined" 
+                      variant="outlined"
+                      sx={{
+                        height: 'auto',
+                        maxWidth: '100%',
+                        '& .MuiChip-label': {
+                          whiteSpace: 'normal',
+                          display: 'block',
+                          textAlign: 'center',
+                          py: 0.5,
+                        },
+                      }}
                     />
                     <Chip 
                       label={key.year} 
