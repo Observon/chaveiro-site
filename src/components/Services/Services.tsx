@@ -58,7 +58,7 @@ const services = [
   {
     title: 'Conserto de Ignição',
     icon: <BuildIcon />,
-    description: 'Conserto e substituição de sistemas de ignição para todos os modelos de veículos.',
+    description: 'Conserto e substituição de sistemas de ignição para varios modelos de veículos.',
   },
 ];
 
