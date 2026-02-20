@@ -1,6 +1,21 @@
 import React from 'react';
-import { AppBar, Toolbar, Button, Box, Container, useTheme, useMediaQuery } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  Box,
+  Container,
+  useTheme,
+  useMediaQuery,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+} from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import MenuIcon from '@mui/icons-material/Menu';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 interface NavLink {
@@ -13,6 +28,7 @@ const Header: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const navLinks: NavLink[] = [
     { path: '/', label: 'Início' },
@@ -25,6 +41,14 @@ const Header: React.FC = () => {
   const isActive = (path: string) => {
     return location.pathname === path || 
            (path !== '/' && location.pathname.startsWith(path));
+  };
+
+  const handleToggleMobileMenu = () => {
+    setMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleCloseMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -45,6 +69,17 @@ const Header: React.FC = () => {
             >
               <img src="/images/logos/logov2.1.png" alt="Claudio Chaveiro Logo" style={{ height: '50px' }} />
             </Box>
+
+            {isMobile && (
+              <IconButton
+                aria-label="Abrir menu"
+                onClick={handleToggleMobileMenu}
+                edge="start"
+                sx={{ color: 'text.primary' }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
 
             {/* Navigation Links */}
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
@@ -94,6 +129,34 @@ const Header: React.FC = () => {
             {isMobile ? <WhatsAppIcon /> : 'Chamar no WhatsApp'}
           </Button>
         </Toolbar>
+
+        <Drawer
+          anchor="left"
+          open={mobileMenuOpen}
+          onClose={handleCloseMobileMenu}
+          PaperProps={{ sx: { width: 280 } }}
+        >
+          <Box sx={{ pt: 2 }} role="presentation" onClick={handleCloseMobileMenu}>
+            <List>
+              {navLinks.map((link) => (
+                <ListItem key={link.path} disablePadding>
+                  <ListItemButton
+                    component={RouterLink}
+                    to={link.path}
+                    selected={isActive(link.path)}
+                  >
+                    <ListItemText
+                      primary={link.label}
+                      primaryTypographyProps={{
+                        fontWeight: isActive(link.path) ? 'bold' : 'normal',
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
       </Container>
     </AppBar>
   );
