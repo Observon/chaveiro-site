@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Grid, Card, CardContent } from '@mui/material';
+import { Box, Button, Container, Typography, Grid, Card, CardContent, CardActions } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -7,6 +7,7 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockClockIcon from '@mui/icons-material/LockClock';
 import BuildIcon from '@mui/icons-material/Build';
 import { styled } from '@mui/material/styles';
+import { Link as RouterLink } from 'react-router-dom';
 
 const ServiceCard = styled(Card)(({ theme }) => ({
   height: '110%',
@@ -104,6 +105,17 @@ const Services: React.FC = () => {
                     {service.description}
                   </Typography>
                 </CardContent>
+                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
+                  <Button
+                    component={RouterLink}
+                    to="/servicos"
+                    variant="text"
+                    color="primary"
+                    sx={{ textTransform: 'none', fontWeight: 'bold' }}
+                  >
+                    Saiba mais
+                  </Button>
+                </CardActions>
               </ServiceCard>
             </Grid>
           ))}

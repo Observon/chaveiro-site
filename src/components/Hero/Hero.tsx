@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button, Container, Typography, Grid } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { Link as RouterLink } from 'react-router-dom';
 
 const Hero: React.FC = () => {
   return (
@@ -99,6 +100,50 @@ const Hero: React.FC = () => {
                 }}
               >
                 Chamar no WhatsApp
+              </Button>
+
+              <Button
+                component={RouterLink}
+                to="/catalogo"
+                variant="outlined"
+                size="large"
+                sx={{
+                  py: 1.5,
+                  px: 3,
+                  borderRadius: 2,
+                  borderColor: 'white',
+                  color: 'white',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                  },
+                }}
+              >
+                Ver Catálogo
+              </Button>
+
+              <Button
+                component={RouterLink}
+                to="/servicos"
+                variant="outlined"
+                size="large"
+                sx={{
+                  py: 1.5,
+                  px: 3,
+                  borderRadius: 2,
+                  borderColor: 'white',
+                  color: 'white',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                  },
+                }}
+              >
+                Ver Serviços
               </Button>
             </Box>
           </Grid>
