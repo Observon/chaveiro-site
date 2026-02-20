@@ -22,6 +22,10 @@ import {
   Paper,
   IconButton,
   Collapse,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   styled,
   Theme
 } from '@mui/material';
@@ -165,6 +169,92 @@ const PriceTag = styled(Typography)(({ theme }: { theme: Theme }) => ({
   margin: theme.spacing(1, 0),
 }));
 
+type AutomotiveKey = (typeof automotiveKeys)[number];
+
+type CatalogQuestionnaire = {
+  keySituation: string;
+  vehicleYearModel: string;
+  keyProfile: string;
+  alarmOriginal: string;
+  notes: string;
+};
+
+const initialQuestionnaire: CatalogQuestionnaire = {
+  keySituation: '',
+  vehicleYearModel: '',
+  keyProfile: '',
+  alarmOriginal: '',
+  notes: '',
+};
+
+const keyTypeVisualHints = [
+  {
+    title: 'Chave simples',
+    value: 'Chave simples (sem telecomando)',
+    description: 'Somente a lâmina da chave, sem botões para abrir/travar.',
+    image: '/images/chaves/automotivas/chave-simples.svg',
+  },
+  {
+    title: 'Chave canivete',
+    value: 'Chave com telecomando canivete',
+    description: 'Possui botões e a lâmina recolhe dentro do corpo da chave.',
+    image: '/images/chaves/automotivas/chave-canivete.svg',
+  },
+  {
+    title: 'Chave fura bolso',
+    value: 'Chave com telecomando não canivete (fura bolso)',
+    description: 'Controle com botões, mas sem lâmina retrátil (formato tradicional).',
+    image: '/images/chaves/automotivas/chave-fura-bolso.svg',
+  },
+  {
+    title: 'Telecomando separado',
+    value: 'Telecomando separado da chave (tipo chaveiro)',
+    description: 'A chave fica separada do controle remoto (tipo chaveiro).',
+    image: '/images/chaves/automotivas/telecomando-separado.svg',
+  },
+];
+
+const buildCatalogWhatsAppMessage = (key: AutomotiveKey, questionnaire: CatalogQuestionnaire) => {
+  const optionalAnswers: string[] = [];
+
+  if (questionnaire.keySituation.trim()) {
+    optionalAnswers.push(`• Situação da chave: ${questionnaire.keySituation}`);
+  }
+
+  if (questionnaire.vehicleYearModel.trim()) {
+    optionalAnswers.push(`• Ano/versão informado: ${questionnaire.vehicleYearModel}`);
+  }
+
+  if (questionnaire.keyProfile.trim()) {
+    optionalAnswers.push(`• Tipo de chave atual: ${questionnaire.keyProfile}`);
+  }
+
+  if (questionnaire.alarmOriginal.trim()) {
+    optionalAnswers.push(`• Alarme original de fábrica: ${questionnaire.alarmOriginal}`);
+  }
+
+  if (questionnaire.notes.trim()) {
+    optionalAnswers.push(`• Observações do cliente: ${questionnaire.notes.trim()}`);
+  }
+
+  const message = [
+    'Olá! Vim pelo catálogo e quero orçamento para esta chave:',
+    '',
+    `• Modelo selecionado: ${key.title}`,
+    `• Marca: ${key.manufacturer}`,
+    `• Tipo da chave no catálogo: ${key.type}`,
+    `• Ano de referência: ${key.year} (faixa ${key.yearRange})`,
+    `• Valor de referência: ${key.formattedPrice}`,
+    '',
+    optionalAnswers.length > 0 ? 'Informações adicionais (opcional):' : 'Informações adicionais: cliente preferiu informar no atendimento.',
+    ...optionalAnswers,
+    '',
+    'Se necessário, também posso enviar foto da chave ou do painel para facilitar a identificação.',
+  ].join('\n');
+
+  return `https://wa.me/5521998063214?text=${encodeURIComponent(message)}`;
+};
+
 const Catalog: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
@@ -173,6 +263,9 @@ const Catalog: React.FC = () => {
 
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
+  const [selectedKeyForContact, setSelectedKeyForContact] = useState<AutomotiveKey | null>(null);
+  const [questionnaire, setQuestionnaire] = useState<CatalogQuestionnaire>(initialQuestionnaire);
 
   // Handle manufacturer selection
   const handleManufacturerChange = (event: SelectChangeEvent<string[]>) => {
@@ -221,6 +314,39 @@ const Catalog: React.FC = () => {
     setYearRangeValue([yearRange.min, yearRange.max]);
 
     setInStockOnly(false);
+  };
+
+  const handleOpenQuestionnaire = (key: AutomotiveKey) => {
+    setSelectedKeyForContact(key);
+    setQuestionnaire(initialQuestionnaire);
+    setQuestionnaireOpen(true);
+  };
+
+  const handleCloseQuestionnaire = () => {
+    setQuestionnaireOpen(false);
+    setSelectedKeyForContact(null);
+  };
+
+  const handleQuestionnaireSelectChange = (field: 'keySituation' | 'keyProfile' | 'alarmOriginal') =>
+    (event: SelectChangeEvent<string>) => {
+      setQuestionnaire((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+
+  const handleQuestionnaireTextChange = (field: 'vehicleYearModel' | 'notes') =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setQuestionnaire((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+
+  const handleSendToWhatsApp = () => {
+    if (!selectedKeyForContact) return;
+
+    const whatsappUrl = buildCatalogWhatsAppMessage(selectedKeyForContact, questionnaire);
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    handleCloseQuestionnaire();
+  };
+
+  const handleVisualKeyTypeSelect = (value: string) => {
+    setQuestionnaire((prev) => ({ ...prev, keyProfile: value }));
   };
 
   return (
@@ -424,9 +550,7 @@ const Catalog: React.FC = () => {
                     variant="contained"
                     color="success"
                     startIcon={<WhatsAppIcon />}
-                    href="https://wa.me/5521998063214?text=Olá! Gostaria de mais informações sobre a chave do meu veículo."
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={() => handleOpenQuestionnaire(key)}
                     sx={{
                       mt: 2,
                       backgroundColor: '#25D366',
@@ -445,6 +569,140 @@ const Catalog: React.FC = () => {
             </ResponsiveGrid>
         </Box>
       </Container>
+
+      <Dialog open={questionnaireOpen} onClose={handleCloseQuestionnaire} fullWidth maxWidth="sm">
+        <DialogTitle>Antes de enviar ao WhatsApp</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Essas respostas são opcionais e ajudam a agilizar seu atendimento.
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Situação da chave</InputLabel>
+              <Select
+                value={questionnaire.keySituation}
+                label="Situação da chave"
+                onChange={handleQuestionnaireSelectChange('keySituation')}
+              >
+                <MenuItem value="">Prefiro informar no atendimento</MenuItem>
+                <MenuItem value="Tenho uma chave funcionando e quero cópia">Tenho uma chave funcionando e quero cópia</MenuItem>
+                <MenuItem value="Perdi todas as chaves">Perdi todas as chaves</MenuItem>
+                <MenuItem value="Não tenho certeza">Não tenho certeza</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="Ano e versão do veículo (opcional)"
+              placeholder="Ex.: 2018 2.0 automático"
+              value={questionnaire.vehicleYearModel}
+              onChange={handleQuestionnaireTextChange('vehicleYearModel')}
+            />
+
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Ajuda rápida: qual destas opções parece com sua chave?
+              </Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                  gap: 1,
+                }}
+              >
+                {keyTypeVisualHints.map((hint) => {
+                  const selected = questionnaire.keyProfile === hint.value;
+
+                  return (
+                    <Paper
+                      key={hint.value}
+                      onClick={() => handleVisualKeyTypeSelect(hint.value)}
+                      role="button"
+                      elevation={selected ? 3 : 1}
+                      sx={{
+                        p: 1.5,
+                        cursor: 'pointer',
+                        border: '1px solid',
+                        borderColor: selected ? 'primary.main' : 'divider',
+                        backgroundColor: selected ? 'action.selected' : 'background.paper',
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={hint.image}
+                        alt={hint.title}
+                        sx={{
+                          width: '100%',
+                          maxWidth: 120,
+                          height: 64,
+                          objectFit: 'contain',
+                          display: 'block',
+                          mx: 'auto',
+                          mb: 1,
+                        }}
+                      />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {hint.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {hint.description}
+                      </Typography>
+                    </Paper>
+                  );
+                })}
+              </Box>
+            </Box>
+
+            <FormControl fullWidth>
+              <InputLabel>Tipo de chave atual</InputLabel>
+              <Select
+                value={questionnaire.keyProfile}
+                label="Tipo de chave atual"
+                onChange={handleQuestionnaireSelectChange('keyProfile')}
+              >
+                <MenuItem value="">Prefiro informar no atendimento</MenuItem>
+                <MenuItem value="Chave simples (sem telecomando)">Chave simples (sem telecomando)</MenuItem>
+                <MenuItem value="Chave com telecomando canivete">Chave com telecomando canivete</MenuItem>
+                <MenuItem value="Chave com telecomando não canivete (fura bolso)">Chave com telecomando não canivete (fura bolso)</MenuItem>
+                <MenuItem value="Chave fura bolso">Chave fura bolso</MenuItem>
+                <MenuItem value="Telecomando separado da chave (tipo chaveiro)">Telecomando separado da chave (tipo chaveiro)</MenuItem>
+                <MenuItem value="Não sei informar">Não sei informar</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Alarme original de fábrica</InputLabel>
+              <Select
+                value={questionnaire.alarmOriginal}
+                label="Alarme original de fábrica"
+                onChange={handleQuestionnaireSelectChange('alarmOriginal')}
+              >
+                <MenuItem value="">Prefiro informar no atendimento</MenuItem>
+                <MenuItem value="Sim">Sim</MenuItem>
+                <MenuItem value="Não">Não</MenuItem>
+                <MenuItem value="Não sei informar">Não sei informar</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              label="Observações (opcional)"
+              placeholder="Ex.: posso enviar foto da chave atual"
+              value={questionnaire.notes}
+              onChange={handleQuestionnaireTextChange('notes')}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseQuestionnaire} variant="text">Cancelar</Button>
+          <Button onClick={handleSendToWhatsApp} variant="contained" color="success" startIcon={<WhatsAppIcon />}>
+            Enviar para WhatsApp
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
