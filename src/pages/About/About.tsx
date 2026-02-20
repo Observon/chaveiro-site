@@ -92,7 +92,8 @@ const About: React.FC = () => {
             <Typography variant="h2" component="h1" gutterBottom sx={{ 
               fontWeight: 700,
               mb: 3,
-              textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              color: '#ffffff'
             }}>
               Sua Segurança é o Nosso Compromisso
             </Typography>
