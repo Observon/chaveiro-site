@@ -12,11 +12,40 @@ import {
   InputAdornment,
   Chip,
   Paper,
-  useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Stack,
   useTheme
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+
+type ServiceQuestionnaire = {
+  [key: string]: string;
+};
+
+const buildServiceWhatsAppMessage = (serviceTitle: string, questionnaire: ServiceQuestionnaire): string => {
+  const answers: string[] = [];
+
+  Object.entries(questionnaire).forEach(([key, value]) => {
+    if (value && value.trim()) {
+      answers.push(`• ${value}`);
+    }
+  });
+
+  const message = [
+    `Olá! Gostaria de solicitar orçamento para: ${serviceTitle}`,
+    '',
+    answers.length > 0 ? 'Informações fornecidas:' : 'Detalhes a informar no atendimento.',
+    ...answers,
+    '',
+    'Posso enviar fotos se necessário.',
+  ].join('\n');
+
+  return `https://wa.me/5521998063214?text=${encodeURIComponent(message)}`;
+};
 
 interface Service {
   id: number;
@@ -31,10 +60,84 @@ interface Service {
 
 const Services: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [questionnaire, setQuestionnaire] = useState<ServiceQuestionnaire>({});
+
+  const handleRequestQuote = (service: Service) => {
+    setSelectedService(service);
+    setQuestionnaire({});
+    setQuoteDialogOpen(true);
+  };
+
+  const handleCloseQuoteDialog = () => {
+    setQuoteDialogOpen(false);
+    setSelectedService(null);
+    setQuestionnaire({});
+  };
+
+  const handleQuestionnaireChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setQuestionnaire((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleSendQuoteRequest = () => {
+    if (!selectedService) return;
+    const whatsappUrl = buildServiceWhatsAppMessage(selectedService.title, questionnaire);
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    handleCloseQuoteDialog();
+  };
+
+  const renderQuestionnaireFields = () => {
+    if (!selectedService) return null;
+    const title = selectedService.title.toLowerCase();
+
+    if (title.includes('abertura de portas') && !title.includes('veículos')) {
+      return (
+        <Stack spacing={2}>
+          <TextField fullWidth label="Marca/Modelo da fechadura (opcional)" placeholder="Ex.: Pauma, Cilíndrica" value={questionnaire['lockBrand'] || ''} onChange={handleQuestionnaireChange('lockBrand')} />
+          <TextField fullWidth label="Tipo de porta (madeira, metal, alumínio)" value={questionnaire['doorType'] || ''} onChange={handleQuestionnaireChange('doorType')} />
+          <TextField fullWidth label="Local (opcional)" placeholder="Ex.: Vila Mariana" value={questionnaire['location'] || ''} onChange={handleQuestionnaireChange('location')} />
+        </Stack>
+      );
+    } else if (title.includes('abertura de veículos')) {
+      return (
+        <Stack spacing={2}>
+          <TextField fullWidth label="Marca" placeholder="Ex.: Ford" value={questionnaire['vehicleBrand'] || ''} onChange={handleQuestionnaireChange('vehicleBrand')} />
+          <TextField fullWidth label="Modelo" placeholder="Ex.: Fiesta" value={questionnaire['vehicleModel'] || ''} onChange={handleQuestionnaireChange('vehicleModel')} />
+          <TextField fullWidth label="Ano" placeholder="Ex.: 2018" value={questionnaire['vehicleYear'] || ''} onChange={handleQuestionnaireChange('vehicleYear')} />
+          <TextField fullWidth label="Local" value={questionnaire['location'] || ''} onChange={handleQuestionnaireChange('location')} />
+          <TextField fullWidth label="Veículo blindado? / Bateria / Fechadura funciona?" multiline minRows={2} placeholder="Sim/Não/Não sei" value={questionnaire['details'] || ''} onChange={handleQuestionnaireChange('details')} />
+        </Stack>
+      );
+    } else if (title.includes('trava tetra')) {
+      return (
+        <Stack spacing={2}>
+          <TextField fullWidth label="Material da porta (ferro, madeira, alumínio)" value={questionnaire['doorMaterial'] || ''} onChange={handleQuestionnaireChange('doorMaterial')} />
+          <TextField fullWidth label="Local" value={questionnaire['location'] || ''} onChange={handleQuestionnaireChange('location')} />
+        </Stack>
+      );
+    } else if (title.includes('controle') && title.includes('portão')) {
+      return (
+        <Stack spacing={2}>
+          <TextField fullWidth label="Marca do motor (Garen, Rossi, Mega, etc)" value={questionnaire['gateMotor'] || ''} onChange={handleQuestionnaireChange('gateMotor')} />
+          <TextField fullWidth label="Possuo controle antigo?" placeholder="Sim/Não" value={questionnaire['details'] || ''} onChange={handleQuestionnaireChange('details')} />
+        </Stack>
+      );
+    } else if (title.includes('empresa')) {
+      return (
+        <Stack spacing={2}>
+          <TextField fullWidth label="Nome da empresa (opcional)" value={questionnaire['company'] || ''} onChange={handleQuestionnaireChange('company')} />
+          <TextField fullWidth multiline minRows={3} label="Que serviços você precisa?" placeholder="Ex.: Troca de fechaduras, cópias de chaves, manutenção" value={questionnaire['scope'] || ''} onChange={handleQuestionnaireChange('scope')} />
+          <TextField fullWidth label="Necessita visita no local?" placeholder="Sim/Não" value={questionnaire['visit'] || ''} onChange={handleQuestionnaireChange('visit')} />
+        </Stack>
+      );
+    }
+    return (
+      <TextField fullWidth multiline minRows={4} label="Informações adicionais (opcional)" value={questionnaire['notes'] || ''} onChange={handleQuestionnaireChange('notes')} />
+    );
+  };
 
   const categories = [
     { id: 'all', name: 'Todos os Serviços' },
@@ -48,7 +151,7 @@ const Services: React.FC = () => {
     {
       id: 1,
       title: 'Abertura de Portas',
-      description: 'Serviço especializado em abertura de portas residenciais e comerciais sem danificar a fechadura.',
+      description: 'Abertura profissional de portas residenciais. Marca/modelo fechadura, tipo de porta e local influenciam no preço.',
       image: 'https://images.unsplash.com/photo-1600891964098-9b5a4b237b67?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
       category: 'residencial',
       price: 'A partir de R$ 120,00',
@@ -57,26 +160,8 @@ const Services: React.FC = () => {
     },
     {
       id: 2,
-      title: 'Troca de Fechaduras',
-      description: 'Substituição de fechaduras antigas por modelos modernos com maior segurança.',
-      image: 'https://images.unsplash.com/photo-1584917865158-27f0f9b24ef5?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      category: 'residencial',
-      price: 'A partir de R$ 80,00',
-      tags: ['Instalação', 'Manutenção']
-    },
-    {
-      id: 3,
-      title: 'Cópias de Chaves',
-      description: 'Cópia de chaves comuns, codificadas e especiais com alta precisão.',
-      image: 'https://images.unsplash.com/photo-1584917934197-8480731ccf80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      category: 'residencial',
-      price: 'A partir de R$ 15,00',
-      tags: ['Rápido', 'Preciso']
-    },
-    {
-      id: 4,
-      title: 'Chaveiro Automotivo',
-      description: 'Abertura de veículos, confecção de chaves codificadas e reparos em geral.',
+      title: 'Abertura de Veículos',
+      description: 'Abertura de carros, motos e caminhões sem danificar a fechadura. Avaliamos marca, modelo, ano e localização.',
       image: 'https://images.unsplash.com/photo-1591768793355-74d04bb9908d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
       category: 'automotivo',
       price: 'A partir de R$ 150,00',
@@ -84,21 +169,94 @@ const Services: React.FC = () => {
       tags: ['Carros', 'Motos', 'Caminhões']
     },
     {
-      id: 5,
-      title: 'Segurança Patrimonial',
-      description: 'Instalação de fechaduras de segurança, trincos e acessórios de proteção.',
+      id: 3,
+      title: 'Instalação de Fechaduras',
+      description: 'Instalação profissional de fechaduras de segurança em residências e comerciais.',
+      image: 'https://images.unsplash.com/photo-1584917865158-27f0f9b24ef5?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'residencial',
+      price: 'A partir de R$ 80,00',
+      tags: ['Instalação', 'Segurança']
+    },
+    {
+      id: 4,
+      title: 'Instalação de Trava Tetra de Segurança',
+      description: 'Instalação de trava adicional para aumentar segurança. Perguntamos material da porta (ferro, madeira, alumínio).',
       image: 'https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
       category: 'seguranca',
-      price: 'Sob Consulta',
-      tags: ['Segurança', 'Proteção']
+      price: 'A partir de R$ 150,00',
+      tags: ['Segurança', 'Auxiliar']
+    },
+    {
+      id: 5,
+      title: 'Cópia de Chave Yale (simples)',
+      description: 'Cópia precisa de chaves yale com máquinas de alto padrão.',
+      image: 'https://images.unsplash.com/photo-1584917934197-8480731ccf80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'residencial',
+      price: 'A partir de R$ 15,00',
+      tags: ['Rápido', 'Preciso']
     },
     {
       id: 6,
-      title: 'Serviço para Empresas',
-      description: 'Soluções completas em chaveiro para estabelecimentos comerciais e empresas.',
+      title: 'Cópia de Chave Tetra',
+      description: 'Cópia de chaves tetra com precisão e rapidez.',
+      image: 'https://images.unsplash.com/photo-1584917934197-8480731ccf80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'residencial',
+      price: 'A partir de R$ 20,00',
+      tags: ['Rápido', 'Tetra']
+    },
+    {
+      id: 7,
+      title: 'Cópia de Chave Gorja',
+      description: 'Cópia especializada de chaves tipo Gorja com máquinas apropriadas.',
+      image: 'https://images.unsplash.com/photo-1584917934197-8480731ccf80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'residencial',
+      price: 'A partir de R$ 18,00',
+      tags: ['Especializada']
+    },
+    {
+      id: 8,
+      title: 'Cópia de Chave Porta de Aço',
+      description: 'Cópia precisa para portas de aço e tipos especiais.',
+      image: 'https://images.unsplash.com/photo-1584917934197-8480731ccf80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'residencial',
+      price: 'A partir de R$ 25,00',
+      tags: ['Especializada', 'Porta Aço']
+    },
+    {
+      id: 9,
+      title: 'Cópia de Tag 125kHz e 13.56MHz',
+      description: 'Cópia de tags RFID para sistemas de acesso eletrônico.',
+      image: 'https://images.unsplash.com/photo-1584917934197-8480731ccf80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'comercial',
+      price: 'A partir de R$ 30,00',
+      tags: ['Eletrônico', 'RFID']
+    },
+    {
+      id: 10,
+      title: 'Controles para Portão de Garagem',
+      description: 'Programação e cópia de controles. Precisamos saber a marca do motor (Garen, Rossi, Mega, etc).',
+      image: 'https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'residencial',
+      price: 'A partir de R$ 80,00',
+      tags: ['Portão', 'Controle']
+    },
+    {
+      id: 11,
+      title: 'Consultoria de Segurança',
+      description: 'Análise profissional da segurança do local com recomendações personalizadas.',
       image: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
       category: 'comercial',
       price: 'Sob Consulta',
+      tags: ['Consultoria', 'Análise']
+    },
+    {
+      id: 12,
+      title: 'Serviço para Empresas',
+      description: 'Soluções completas em chaveiro para estabelecimentos. Oferecemos visita no local para orçamento personalizado.',
+      image: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+      category: 'comercial',
+      price: 'Sob Consulta',
+      featured: true,
       tags: ['Comercial', 'Empresas']
     },
   ];
@@ -234,8 +392,7 @@ const Services: React.FC = () => {
                           variant="contained" 
                           color="primary" 
                           size="small"
-                          component={Link}
-                          to={`/contato?service=${encodeURIComponent(service.title)}`}
+                          onClick={() => handleRequestQuote(service)}
                         >
                           Solicitar Orçamento
                         </Button>
@@ -334,8 +491,7 @@ const Services: React.FC = () => {
                           variant="outlined" 
                           color="primary" 
                           size="small"
-                          component={Link}
-                          to={`/contato?service=${encodeURIComponent(service.title)}`}
+                          onClick={() => handleRequestQuote(service)}
                         >
                           Solicitar
                         </Button>
@@ -370,8 +526,7 @@ const Services: React.FC = () => {
             variant="contained" 
             color="secondary" 
             size="large"
-            component={Link}
-            to="/contato"
+            onClick={() => handleRequestQuote({ title: 'Orçamento Personalizado para Empresas', id: 999, category: 'comercial', description: '', image: '', price: '', tags: [] })}
             sx={{ 
               px: 4, 
               py: 1.5,
@@ -381,10 +536,31 @@ const Services: React.FC = () => {
               }
             }}
           >
-            Fale Conosco
+            Solicitar Orçamento Personalizado
           </Button>
         </Box>
       </Container>
+
+      <Dialog open={quoteDialogOpen} onClose={handleCloseQuoteDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Informações para Orçamento - {selectedService?.title}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, pt: 1 }}>
+            Preencha as informações abaixo (campos opcionais ajudam a agilizar).
+          </Typography>
+          {renderQuestionnaireFields()}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseQuoteDialog} variant="text">Cancelar</Button>
+          <Button
+            onClick={handleSendQuoteRequest}
+            variant="contained"
+            color="success"
+            startIcon={<WhatsAppIcon />}
+          >
+            Solicitar via WhatsApp
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
