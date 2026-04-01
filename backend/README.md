@@ -23,20 +23,11 @@ Servicos:
 ## Rodar local sem Docker
 ### Windows (PowerShell)
 ```bash
-# Windows (cmd/PowerShell)
 cd backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# macOS / Linux (POSIX shell)
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
