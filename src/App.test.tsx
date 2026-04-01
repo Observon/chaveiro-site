@@ -14,7 +14,13 @@ jest.mock(
       return <>{homeRoute?.props?.element ?? null}</>;
     };
 
-    const Link = ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>;
+    const Link = react.forwardRef<HTMLAnchorElement, React.ComponentProps<'a'> & { to: string }>(
+      ({ children, to, ...rest }, ref) => (
+        <a href={to} ref={ref} {...rest}>
+          {children}
+        </a>
+      )
+    );
     const useLocation = () => ({ pathname: '/' });
 
     return {
