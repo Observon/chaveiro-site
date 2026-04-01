@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16
+    container_name: chaveiro_db
+    environment:
+      POSTGRES_DB: chaveiro_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+
+  api:
+    build:
+      context: ./backend
+    container_name: chaveiro_api
+    env_file:
+      - ./backend/.env.example
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

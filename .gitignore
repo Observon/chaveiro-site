@@ -21,3 +21,15 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# python backend
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/.env
+*.pyc
+
+#others
+GUIA_TECNICO_JUNIOR.md
