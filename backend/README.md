@@ -10,6 +10,7 @@ docker compose up --build
 ```
 
 O Compose sobe com valores padrao, sem exigir `backend/.env` no primeiro bootstrap.
+Se quiser customizar o Postgres, defina `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_PORT` no ambiente local ou em um arquivo `.env` na raiz do projeto.
 
 Se quiser sobrescrever variaveis localmente, crie `backend/.env` com base em `backend/.env.example`.
 
