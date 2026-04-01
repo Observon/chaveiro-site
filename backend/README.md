@@ -5,11 +5,31 @@
 - Docker (opcional, recomendado)
 
 ## Subir com Docker Compose (raiz do projeto)
+Defina a variavel `POSTGRES_PASSWORD` antes de subir os containers.
+
+Windows (PowerShell):
 ```bash
+$env:POSTGRES_PASSWORD="troque-esta-senha"
 docker compose up --build
 ```
 
-O Compose sobe com valores padrao, sem exigir `backend/.env` no primeiro bootstrap.
+macOS / Linux:
+```bash
+export POSTGRES_PASSWORD="troque-esta-senha"
+docker compose up --build
+```
+
+Opcional: voce pode criar um arquivo `.env` na raiz do projeto com essas variaveis para nao exportar a cada execucao.
+
+```bash
+POSTGRES_PASSWORD=troque-esta-senha
+# opcionais
+# POSTGRES_DB=chaveiro_db
+# POSTGRES_USER=postgres
+# POSTGRES_PORT=5432
+```
+
+O Compose sobe com valores padrao, mas exige `POSTGRES_PASSWORD` por seguranca.
 Se quiser customizar o Postgres, defina `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_PORT` no ambiente local ou em um arquivo `.env` na raiz do projeto.
 
 Se quiser sobrescrever variaveis localmente, crie `backend/.env` com base em `backend/.env.example`.
