@@ -3,13 +3,16 @@ import { render, screen } from '@testing-library/react';
 
 jest.mock(
   'react-router-dom',
-  () => ({
-    BrowserRouter: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    Routes: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    Route: ({ element }: { element: React.ReactElement }) => element,
-    Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
-    useLocation: () => ({ pathname: '/' }),
-  }),
+  () => {
+    const actual = jest.requireActual('react-router-dom');
+
+    return {
+      ...actual,
+      BrowserRouter: ({ children }: { children: React.ReactNode }) => (
+        <actual.MemoryRouter initialEntries={['/']}>{children}</actual.MemoryRouter>
+      ),
+    };
+  },
   { virtual: true }
 );
 
