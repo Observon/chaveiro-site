@@ -32,3 +32,6 @@ CREATE TABLE IF NOT EXISTS quotes (
 
 CREATE INDEX IF NOT EXISTS idx_automotive_keys_year ON automotive_keys(year);
 CREATE INDEX IF NOT EXISTS idx_automotive_keys_stock ON automotive_keys(in_stock);
+CREATE INDEX IF NOT EXISTS idx_automotive_keys_manufacturer_id ON automotive_keys(manufacturer_id);
+CREATE INDEX IF NOT EXISTS idx_automotive_keys_key_type_id ON automotive_keys(key_type_id);
+CREATE INDEX IF NOT EXISTS idx_quotes_automotive_key_id ON quotes(automotive_key_id);
