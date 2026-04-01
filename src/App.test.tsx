@@ -9,13 +9,14 @@ jest.mock(
     const BrowserRouter = ({ children }: { children: React.ReactNode }) => <>{children}</>;
     const Route = () => null;
     const Routes = ({ children }: { children: React.ReactNode }) => {
-      const routeChildren = react.Children.toArray(children) as React.ReactElement[];
+      const routeChildren = react.Children.toArray(children) as Array<
+        React.ReactElement<{ path?: string; element?: React.ReactNode }>
+      >;
       const homeRoute = routeChildren.find((route) => route.props?.path === '/');
       return <>{homeRoute?.props?.element ?? null}</>;
     };
 
-    const Link = react.forwardRef<HTMLAnchorElement, React.ComponentProps<'a'> & { to: string }>(
-      ({ children, to, ...rest }, ref) => (
+    const Link = react.forwardRef(({ children, to, ...rest }: any, ref: any) => (
         <a href={to} ref={ref} {...rest}>
           {children}
         </a>
