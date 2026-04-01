@@ -1,39 +1,39 @@
 # Git Workflow
 
 ## Objetivo
-Manter o historico do projeto legivel, com commits pequenos, semanticos e facil de revisar.
+Manter o histórico do projeto legível, com commits pequenos, semânticos e fácil de revisar.
 
 ## Branches
-- `main`: sempre estavel
+- `main`: sempre estável
 - `feature/<assunto>`: novas funcionalidades
-- `fix/<assunto>`: correcoes pontuais
-- `docs/<assunto>`: documentacao
+- `fix/<assunto>`: correções pontuais
+- `docs/<assunto>`: documentação
 - `test/<assunto>`: testes e ajustes de qualidade
 
-## Commits semanticos
+## Commits semânticos
 Formato sugerido:
-- `feat: adiciona endpoint de catalogo`
+- `feat: adiciona endpoint de catálogo`
 - `fix: corrige teste de roteamento`
-- `test: adiciona cenario de filtros`
-- `docs: atualiza guia tecnico`
-- `chore: ajusta configuracao do projeto`
+- `test: adiciona cenário de filtros`
+- `docs: atualiza guia técnico`
+- `chore: ajusta configuração do projeto`
 
-Regras praticas:
-- cada commit deve resolver um unico objetivo
-- evitar commits genericos como `update` ou `fixes`
-- preferir mensagens no imperativo e especificas
+Regras práticas:
+- cada commit deve resolver um único objetivo
+- evitar commits genéricos como `update` ou `fixes`
+- preferir mensagens no imperativo e específicas
 - commitar primeiro a base funcional, depois refinamentos
 
 ## Fluxo recomendado
 1. Criar branch a partir de `main`.
-2. Fazer alteracoes pequenas e coerentes.
+2. Fazer alterações pequenas e coerentes.
 3. Rodar testes antes do commit.
-4. Commits semanticos com escopo claro.
-5. Abrir PR com descricao objetiva e checklist.
+4. Commits semânticos com escopo claro.
+5. Abrir PR com descrição objetiva e checklist.
 
 ## O que documentar no PR
-- contexto da mudanca
+- contexto da mudança
 - o que foi feito
 - como validar
-- riscos ou pendencias
+- riscos ou pendências
 - capturas de tela quando fizer sentido
