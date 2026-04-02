@@ -10,7 +10,7 @@
 Projeto full stack em evolucao para catalogo de chaves automotivas e atendimento de orcamentos.
 
 Objetivo tecnico atual:
-- consolidar base de engenharia para portfolio junior;
+- estudar e consolidar fundamentos de engenharia de software;
 - evoluir frontend React para consumo de API real;
 - estruturar backend com FastAPI + PostgreSQL + testes.
 
