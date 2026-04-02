@@ -42,9 +42,19 @@ Backend:
 
 ### 1) Frontend
 
+Windows (PowerShell):
+
 ```bash
 npm install
-copy .env.example .env
+Copy-Item .env.example .env
+npm start
+```
+
+macOS / Linux:
+
+```bash
+npm install
+cp .env.example .env
 npm start
 ```
 
