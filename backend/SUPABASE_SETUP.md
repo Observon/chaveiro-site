@@ -14,7 +14,7 @@ User: postgres
 Crie ou atualize `backend/.env` com a connection string:
 
 ```env
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.qcolywtabiamgeizdocb.supabase.co:5432/postgres
+DATABASE_URL=postgresql+psycopg://postgres:[YOUR-PASSWORD]@db.qcolywtabiamgeizdocb.supabase.co:5432/postgres
 ```
 
 **Importante:** Substitua `[YOUR-PASSWORD]` pela senha fornecida pelo Supabase.
