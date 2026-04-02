@@ -217,6 +217,7 @@ const buildCatalogWhatsAppMessage = (key: AutomotiveKey, questionnaire: CatalogQ
 
 const Catalog: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [keys, setKeys] = useState<AutomotiveKey[]>([]);
   const [manufacturers, setManufacturers] = useState<string[]>([]);
   const [keyTypes, setKeyTypes] = useState<string[]>([]);
@@ -239,6 +240,16 @@ const Catalog: React.FC = () => {
     const size = yearRangeBounds.max - yearRangeBounds.min + 1;
     return Array.from({ length: size }, (_, index) => yearRangeBounds.max - index);
   }, [yearRangeBounds]);
+
+  useEffect(() => {
+    const debounceTimer = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400);
+
+    return () => {
+      window.clearTimeout(debounceTimer);
+    };
+  }, [searchTerm]);
 
   useEffect(() => {
     let disposed = false;
@@ -297,8 +308,8 @@ const Catalog: React.FC = () => {
       try {
         const params = new URLSearchParams();
 
-        if (searchTerm.trim()) {
-          params.set('search', searchTerm.trim());
+        if (debouncedSearchTerm.trim()) {
+          params.set('search', debouncedSearchTerm.trim());
         }
 
         selectedManufacturers.forEach((manufacturer) => {
@@ -338,7 +349,7 @@ const Catalog: React.FC = () => {
     return () => {
       controller.abort();
     };
-  }, [searchTerm, selectedManufacturers, selectedKeyTypes, yearRangeValue, inStockOnly, isInitialized]);
+  }, [debouncedSearchTerm, selectedManufacturers, selectedKeyTypes, yearRangeValue, inStockOnly, isInitialized]);
 
   // Handle manufacturer selection
   const handleManufacturerChange = (event: SelectChangeEvent<string[]>) => {
