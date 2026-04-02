@@ -40,6 +40,14 @@ Servicos:
 - Swagger: http://localhost:8000/docs
 - PostgreSQL: localhost:5432
 
+## Endpoints atuais
+- GET /health
+- GET /api/manufacturers
+- GET /api/key-types
+- GET /api/keys
+	- filtros: `search`, `manufacturer`, `key_type`, `year_from`, `year_to`, `in_stock`
+- GET /api/keys/{key_id}
+
 ## Rodar local sem Docker
 ### Windows (PowerShell)
 ```bash
