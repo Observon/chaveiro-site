@@ -81,7 +81,26 @@ type AutomotiveKey = {
   inStock: boolean;
 };
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+const DEFAULT_API_BASE_URL = 'http://127.0.0.1:8000/api';
+
+const getApiBaseUrl = () => {
+  const configuredApiBaseUrl = process.env.REACT_APP_API_BASE_URL?.trim();
+  const apiBaseUrl = configuredApiBaseUrl || DEFAULT_API_BASE_URL;
+
+  try {
+    const parsedUrl = new URL(apiBaseUrl);
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error('REACT_APP_API_BASE_URL must be an absolute HTTP(S) URL.');
+    }
+
+    return apiBaseUrl;
+  } catch (error) {
+    throw new Error(`Invalid REACT_APP_API_BASE_URL "${apiBaseUrl}". Expected an absolute HTTP(S) URL.`);
+  }
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const defaultYearRange = {
   min: 2000,
