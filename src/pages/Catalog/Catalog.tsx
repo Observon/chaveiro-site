@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -25,6 +25,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Alert,
+  CircularProgress,
   styled,
   Theme
 } from '@mui/material';
@@ -61,149 +63,30 @@ const GridItem = styled('div')({
   width: '100%',
 });
 
-// Sample data for automotive keys
-const automotiveKeys = [
-  {
-    id: 1,
-    title: 'Nissan Sentra',
-    manufacturer: 'Nissan',
-    type: 'Chave presencial (de presença)',
-    year: 2018,
-    yearRange: '2016 - 2020',
-    price: 280.00,
-    formattedPrice: 'R$ 280,00',
-    image: '/images/nissan-sentra-key.jpg',
-    inStock: true,
-  },
-  {
-    id: 2,
-    title: 'Honda Civic',
-    manufacturer: 'Honda',
-    type: 'Chave com telecomando canivete',
-    year: 2017,
-    yearRange: '2014 - 2019',
-    price: 320.00,
-    formattedPrice: 'R$ 320,00',
-    image: '/images/honda-civic-key.jpg',
-    inStock: true,
-  },
-  {
-    id: 3,
-    title: 'Toyota Corolla',
-    manufacturer: 'Toyota',
-    type: 'Chave com telecomando não canivete (fura bolso)',
-    year: 2019,
-    yearRange: '2017 - 2021',
-    price: 350.00,
-    formattedPrice: 'R$ 350,00',
-    image: '/images/toyota-corolla-key.jpg',
-    inStock: true,
-  },
-  {
-    id: 4,
-    title: 'Volkswagen Gol',
-    manufacturer: 'Volkswagen',
-    type: 'Chave simples (sem telecomando)',
-    year: 2015,
-    yearRange: '2013 - 2017',
-    price: 250.00,
-    formattedPrice: 'R$ 250,00',
-    image: '/images/vw-gol-key.jpg',
-    inStock: true,
-  },
-  {
-    id: 5,
-    title: 'Fiat Palio',
-    manufacturer: 'Fiat',
-    type: 'Chave com telecomando canivete',
-    year: 2016,
-    yearRange: '2014 - 2018',
-    price: 230.00,
-    formattedPrice: 'R$ 230,00',
-    image: '/images/fiat-palio-key.jpg',
-    inStock: false,
-  },
-  {
-    id: 6,
-    title: 'Chevrolet Onix',
-    manufacturer: 'Chevrolet',
-    type: 'Telecomando separado da chave (tipo chaveiro)',
-    year: 2020,
-    yearRange: '2019 - 2023',
-    price: 380.00,
-    formattedPrice: 'R$ 380,00',
-    image: '/images/chevrolet-onix-key.jpg',
-    inStock: true,
-  },
-];
-
-const manufacturers = [
-  'Toyota',
-  'Honda',
-  'Nissan',
-  'Subaru',
-  'Mitsubishi Motors',
-  'Suzuki',
-  'Lexus',
-  'Infiniti',
-  'Acura',
-  'Volkswagen',
-  'BMW',
-  'Mercedes-Benz',
-  'Audi',
-  'Porsche',
-  'Opel',
-  'Ford',
-  'Chevrolet',
-  'Tesla',
-  'Jeep',
-  'Cadillac',
-  'Chrysler',
-  'Dodge',
-  'Ram',
-  'GMC',
-  'Buick',
-  'Hyundai',
-  'Kia',
-  'Peugeot',
-  'Citroën',
-  'Renault',
-  'Fiat',
-  'Alfa Romeo',
-  'Volvo',
-  'Skoda',
-  'SEAT',
-  'Mini',
-  'Jaguar',
-  'Land Rover',
-  'BYD',
-  'Chery',
-  'Geely',
-  'Great Wall Motors - GWM',
-  'Haval',
-  'JAC Motors',
-  'Troller',
-  'GAC',
-].sort();
-
-const keyTypes = [
-  'Chave simples (sem telecomando)',
-  'Chave com telecomando canivete',
-  'Chave presencial (de presença)',
-  'Chave com telecomando não canivete (fura bolso)',
-  'Telecomando separado da chave (tipo chaveiro)',
-];
-
-// Year range for the filter
-const yearRange = {
-  min: Math.min(...automotiveKeys.map(key => key.year)),
-  max: Math.max(...automotiveKeys.map(key => key.year))
+type KeyOption = {
+  id: number;
+  name: string;
 };
 
-const yearOptions = Array.from(
-  { length: yearRange.max - yearRange.min + 1 },
-  (_, index) => yearRange.max - index
-);
+type AutomotiveKey = {
+  id: number;
+  title: string;
+  manufacturer: string;
+  type: string;
+  year: number;
+  yearRange: string;
+  price: number;
+  formattedPrice: string;
+  image: string;
+  inStock: boolean;
+};
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+
+const defaultYearRange = {
+  min: 2000,
+  max: new Date().getFullYear(),
+};
 
 
 
@@ -223,8 +106,6 @@ const PriceTag = styled(Typography)(({ theme }: { theme: Theme }) => ({
   fontWeight: 'bold',
   margin: theme.spacing(1, 0),
 }));
-
-type AutomotiveKey = (typeof automotiveKeys)[number];
 
 type CatalogQuestionnaire = {
   keySituation: string;
@@ -317,15 +198,139 @@ const buildCatalogWhatsAppMessage = (key: AutomotiveKey, questionnaire: CatalogQ
 
 const Catalog: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [keys, setKeys] = useState<AutomotiveKey[]>([]);
+  const [manufacturers, setManufacturers] = useState<string[]>([]);
+  const [keyTypes, setKeyTypes] = useState<string[]>([]);
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
   const [selectedKeyTypes, setSelectedKeyTypes] = useState<string[]>([]);
-  const [yearRangeValue, setYearRangeValue] = useState<number[]>([yearRange.min, yearRange.max]);
+  const [yearRangeBounds, setYearRangeBounds] = useState(defaultYearRange);
+  const [yearRangeValue, setYearRangeValue] = useState<number[]>([defaultYearRange.min, defaultYearRange.max]);
 
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
   const [selectedKeyForContact, setSelectedKeyForContact] = useState<AutomotiveKey | null>(null);
   const [questionnaire, setQuestionnaire] = useState<CatalogQuestionnaire>(initialQuestionnaire);
+
+  const yearOptions = useMemo(() => {
+    const size = yearRangeBounds.max - yearRangeBounds.min + 1;
+    return Array.from({ length: size }, (_, index) => yearRangeBounds.max - index);
+  }, [yearRangeBounds]);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const loadInitialData = async () => {
+      setIsBootstrapping(true);
+      setErrorMessage(null);
+
+      try {
+        const [manufacturersResponse, keyTypesResponse, keysResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/manufacturers`),
+          fetch(`${API_BASE_URL}/key-types`),
+          fetch(`${API_BASE_URL}/keys`),
+        ]);
+
+        if (!manufacturersResponse.ok || !keyTypesResponse.ok || !keysResponse.ok) {
+          throw new Error('Não foi possível carregar os dados iniciais do catálogo.');
+        }
+
+        const [manufacturerData, keyTypeData, keysData] = await Promise.all([
+          manufacturersResponse.json() as Promise<KeyOption[]>,
+          keyTypesResponse.json() as Promise<KeyOption[]>,
+          keysResponse.json() as Promise<AutomotiveKey[]>,
+        ]);
+
+        if (disposed) return;
+
+        setManufacturers(manufacturerData.map((item) => item.name).sort((a, b) => a.localeCompare(b)));
+        setKeyTypes(keyTypeData.map((item) => item.name));
+        setKeys(keysData);
+
+        if (keysData.length > 0) {
+          const years = keysData.map((key) => key.year);
+          const min = Math.min(...years);
+          const max = Math.max(...years);
+          setYearRangeBounds({ min, max });
+          setYearRangeValue([min, max]);
+        }
+
+        setIsInitialized(true);
+      } catch (error) {
+        if (disposed) return;
+        setErrorMessage('Falha ao carregar o catálogo. Verifique se a API está em execução.');
+      } finally {
+        if (!disposed) {
+          setIsBootstrapping(false);
+        }
+      }
+    };
+
+    loadInitialData();
+
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const controller = new AbortController();
+
+    const loadFilteredKeys = async () => {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const params = new URLSearchParams();
+
+        if (searchTerm.trim()) {
+          params.set('search', searchTerm.trim());
+        }
+
+        selectedManufacturers.forEach((manufacturer) => {
+          params.append('manufacturer', manufacturer);
+        });
+
+        selectedKeyTypes.forEach((keyType) => {
+          params.append('key_type', keyType);
+        });
+
+        params.set('year_from', String(yearRangeValue[0]));
+        params.set('year_to', String(yearRangeValue[1]));
+
+        if (inStockOnly) {
+          params.set('in_stock', 'true');
+        }
+
+        const endpoint = `${API_BASE_URL}/keys${params.toString() ? `?${params.toString()}` : ''}`;
+        const response = await fetch(endpoint, { signal: controller.signal });
+
+        if (!response.ok) {
+          throw new Error('Não foi possível aplicar os filtros.');
+        }
+
+        const data = await response.json() as AutomotiveKey[];
+        setKeys(data);
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') return;
+        setErrorMessage('Não foi possível atualizar os filtros do catálogo.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFilteredKeys();
+
+    return () => {
+      controller.abort();
+    };
+  }, [searchTerm, selectedManufacturers, selectedKeyTypes, yearRangeValue, inStockOnly, isInitialized]);
 
   // Handle manufacturer selection
   const handleManufacturerChange = (event: SelectChangeEvent<string[]>) => {
@@ -356,35 +361,12 @@ const Catalog: React.FC = () => {
       return [Math.min(currentFromYear, nextToYear), nextToYear];
     });
   };
-
-
-  // Filter the keys based on selected filters
-  const filteredKeys = useMemo(() => {
-    return automotiveKeys.filter(key => {
-      const searchMatch = key.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           key.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const manufacturerMatch = selectedManufacturers.length === 0 || 
-                                 selectedManufacturers.includes(key.manufacturer);
-      
-      const keyTypeMatch = selectedKeyTypes.length === 0 || 
-                            selectedKeyTypes.includes(key.type);
-      
-      const yearMatch = key.year >= yearRangeValue[0] && 
-                              key.year <= yearRangeValue[1];
-      
-      const stockMatch = !inStockOnly || key.inStock;
-
-      return searchMatch && manufacturerMatch && keyTypeMatch && yearMatch && stockMatch;
-    });
-  }, [searchTerm, selectedManufacturers, selectedKeyTypes, yearRangeValue, inStockOnly]);
-
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm('');
     setSelectedManufacturers([]);
     setSelectedKeyTypes([]);
-    setYearRangeValue([yearRange.min, yearRange.max]);
+    setYearRangeValue([yearRangeBounds.min, yearRangeBounds.max]);
 
     setInStockOnly(false);
   };
@@ -599,16 +581,28 @@ const Catalog: React.FC = () => {
             </FilterContainer>
           </Collapse>
         </Paper>
+
+        {errorMessage && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {errorMessage}
+          </Alert>
+        )}
+
+        {(isBootstrapping || isLoading) && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <CircularProgress />
+          </Box>
+        )}
         
         {/* Results Count */}
         <Typography variant="subtitle1" sx={{ mb: 3, color: 'text.secondary' }}>
-          {filteredKeys.length} {filteredKeys.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+          {keys.length} {keys.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
         </Typography>
         
         {/* Product Grid */}
         <Box sx={{ width: '100%' }}>
           <ResponsiveGrid>
-          {filteredKeys.map((key) => (
+          {keys.map((key) => (
             <GridItem key={key.id}>
               <ProductCard elevation={3}>
                 <CardMedia
