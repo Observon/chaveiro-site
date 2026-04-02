@@ -1,46 +1,106 @@
-# Getting Started with Create React App
+# Chaveiro Site
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-4.9-3178C6?logo=typescript&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker_Compose-Local-2496ED?logo=docker&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Em%20evolucao-orange)
 
-## Available Scripts
+Projeto full stack em evolucao para catalogo de chaves automotivas e atendimento de orcamentos.
 
-In the project directory, you can run:
+Objetivo tecnico atual:
+- consolidar base de engenharia para portfolio junior;
+- evoluir frontend React para consumo de API real;
+- estruturar backend com FastAPI + PostgreSQL + testes.
 
-### `npm start`
+## Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Frontend:
+- React + TypeScript
+- Material UI
+- React Router
+- React Testing Library + Jest
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Backend:
+- Python 3.11+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Docker Compose
 
-### `npm test`
+## Estrutura do projeto
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- `src/`: frontend React
+- `public/`: assets estaticos
+- `backend/app/`: backend FastAPI
+- `backend/sql/`: schema e seed do banco
+- `docker-compose.yml`: ambiente local de API + PostgreSQL
+- `docs/`: guias internos (workflow Git, etc.)
 
-### `npm run build`
+## Como rodar
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1) Frontend
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm install
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+App: http://localhost:3000
 
-### `npm run eject`
+### 2) Backend com Docker (recomendado)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Defina `POSTGRES_PASSWORD` antes de subir os containers.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Windows (PowerShell):
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+$env:POSTGRES_PASSWORD="troque-esta-senha"
+docker compose up --build
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+macOS / Linux:
 
-## Learn More
+```bash
+export POSTGRES_PASSWORD="troque-esta-senha"
+docker compose up --build
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+API: http://localhost:8000
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Swagger: http://localhost:8000/docs
+
+Healthcheck: http://localhost:8000/health
+
+### 3) Backend sem Docker (opcional)
+
+Consulte `backend/README.md`.
+
+## Testes e build
+
+```bash
+npm test -- --watchAll=false
+npm run build
+```
+
+## Workflow Git
+
+Padrao atual:
+- commits semanticos (`feat:`, `fix:`, `docs:`, `test:`, `chore:`)
+- branch por entrega (`feature/<assunto>`)
+- PR com template em `.github/PULL_REQUEST_TEMPLATE.md`
+
+Guia rapido: `docs/GIT_WORKFLOW.md`
+
+## Status atual
+
+Concluido no Dia 1:
+- base backend FastAPI + healthcheck;
+- schema e seed iniciais do PostgreSQL;
+- compose com ajustes de seguranca para ambiente local;
+- estabilizacao de testes do frontend.
+
+Proximo passo (Dia 2):
+- implementar endpoints REST de catalogo com filtros;
+- preparar integracao frontend com dados vindos da API.
