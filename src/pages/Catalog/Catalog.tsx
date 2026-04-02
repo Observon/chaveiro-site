@@ -222,7 +222,7 @@ const Catalog: React.FC = () => {
   const [keyTypes, setKeyTypes] = useState<string[]>([]);
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
   const [selectedKeyTypes, setSelectedKeyTypes] = useState<string[]>([]);
-  const [yearRangeBounds, setYearRangeBounds] = useState(defaultYearRange);
+  const [yearRangeBounds] = useState(defaultYearRange);
   const [yearRangeValue, setYearRangeValue] = useState<number[]>([defaultYearRange.min, defaultYearRange.max]);
 
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -248,35 +248,24 @@ const Catalog: React.FC = () => {
       setErrorMessage(null);
 
       try {
-        const [manufacturersResponse, keyTypesResponse, keysResponse] = await Promise.all([
+        const [manufacturersResponse, keyTypesResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/manufacturers`),
           fetch(`${API_BASE_URL}/key-types`),
-          fetch(`${API_BASE_URL}/keys`),
         ]);
 
-        if (!manufacturersResponse.ok || !keyTypesResponse.ok || !keysResponse.ok) {
+        if (!manufacturersResponse.ok || !keyTypesResponse.ok) {
           throw new Error('Não foi possível carregar os dados iniciais do catálogo.');
         }
 
-        const [manufacturerData, keyTypeData, keysData] = await Promise.all([
+        const [manufacturerData, keyTypeData] = await Promise.all([
           manufacturersResponse.json() as Promise<KeyOption[]>,
           keyTypesResponse.json() as Promise<KeyOption[]>,
-          keysResponse.json() as Promise<AutomotiveKey[]>,
         ]);
 
         if (disposed) return;
 
         setManufacturers(manufacturerData.map((item) => item.name).sort((a, b) => a.localeCompare(b)));
         setKeyTypes(keyTypeData.map((item) => item.name));
-        setKeys(keysData);
-
-        if (keysData.length > 0) {
-          const years = keysData.map((key) => key.year);
-          const min = Math.min(...years);
-          const max = Math.max(...years);
-          setYearRangeBounds({ min, max });
-          setYearRangeValue([min, max]);
-        }
 
         setIsInitialized(true);
       } catch (error) {
