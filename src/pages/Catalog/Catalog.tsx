@@ -614,9 +614,11 @@ const Catalog: React.FC = () => {
         )}
         
         {/* Results Count */}
-        <Typography variant="subtitle1" sx={{ mb: 3, color: 'text.secondary' }}>
-          {keys.length} {keys.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
-        </Typography>
+        {!isBootstrapping && (
+          <Typography variant="subtitle1" sx={{ mb: 3, color: 'text.secondary' }}>
+            {keys.length} {keys.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+          </Typography>
+        )}
         
         {/* Product Grid */}
         <Box sx={{ width: '100%' }}>
