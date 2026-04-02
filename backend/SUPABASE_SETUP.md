@@ -3,18 +3,20 @@
 ## Informações da Conexão
 
 ```
-Host: db.qcolywtabiamgeizdocb.supabase.co
+Host: db.<project-ref>.supabase.co
 Port: 5432
-Database: postgres
-User: postgres
+Database: <database-name>
+User: <database-user>
 ```
+
+Copie esses valores em **Supabase Dashboard** → **Settings** → **Database**.
 
 ## 1. Configurar `.env`
 
 Crie ou atualize `backend/.env` com a connection string:
 
 ```env
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.qcolywtabiamgeizdocb.supabase.co:5432/postgres
+DATABASE_URL=postgresql+psycopg://<database-user>:[YOUR-PASSWORD]@db.<project-ref>.supabase.co:5432/<database-name>
 ```
 
 **Importante:** Substitua `[YOUR-PASSWORD]` pela senha fornecida pelo Supabase.
@@ -35,7 +37,7 @@ DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.qcolywtabiamgeizdocb.supab
 # No Windows: usar WSL ou PostgreSQL installer
 
 # Executar schema
-psql -h db.qcolywtabiamgeizdocb.supabase.co -p 5432 -U postgres -d postgres -f backend\sql\schema.sql
+psql -h db.<project-ref>.supabase.co -p 5432 -U <database-user> -d <database-name> -f backend\sql\schema.sql
 ```
 
 ## 3. Executar Seed (Dados Iniciais)
@@ -50,7 +52,7 @@ psql -h db.qcolywtabiamgeizdocb.supabase.co -p 5432 -U postgres -d postgres -f b
 ### Opção B: Via Terminal (psql)
 
 ```powershell
-psql -h db.qcolywtabiamgeizdocb.supabase.co -p 5432 -U postgres -d postgres -f backend\sql\seed.sql
+psql -h db.<project-ref>.supabase.co -p 5432 -U <database-user> -d <database-name> -f backend\sql\seed.sql
 ```
 
 ## 4. Testar Conexão
