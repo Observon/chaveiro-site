@@ -44,10 +44,15 @@ Backend:
 
 ```bash
 npm install
+copy .env.example .env
 npm start
 ```
 
 App: http://localhost:3000
+
+Variavel de ambiente do frontend:
+- `REACT_APP_API_BASE_URL` (ex.: `http://127.0.0.1:8000/api` em desenvolvimento)
+- Em producao, aponte para a URL publica da API (ex.: `https://api.seudominio.com/api`)
 
 ### 2) Backend com Docker (recomendado)
 
