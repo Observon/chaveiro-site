@@ -23,15 +23,20 @@ const mockFetchSequence = (...responses: unknown[]) => {
     });
   });
 
-  global.fetch = mockFetch as unknown as typeof global.fetch;
   return mockFetch;
 };
 
 describe('Catalog empty state inteligente', () => {
+  const originalFetch = global.fetch;
   const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
 
   afterEach(() => {
     jest.clearAllMocks();
+    global.fetch = originalFetch;
+  });
+
+  afterAll(() => {
+    openSpy.mockRestore();
   });
 
   afterAll(() => {
@@ -39,7 +44,7 @@ describe('Catalog empty state inteligente', () => {
   });
 
   test('exibe sugestoes proximas e CTA de WhatsApp quando nao ha resultados', async () => {
-    mockFetchSequence(
+    const mockFetch = mockFetchSequence(
       [
         { id: 1, name: 'GM' },
         { id: 2, name: 'Volkswagen' },
@@ -63,6 +68,7 @@ describe('Catalog empty state inteligente', () => {
         },
       ]
     );
+    global.fetch = mockFetch as unknown as typeof global.fetch;
 
     render(<Catalog />);
 
