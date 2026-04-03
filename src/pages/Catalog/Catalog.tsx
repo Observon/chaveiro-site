@@ -423,6 +423,14 @@ const Catalog: React.FC = () => {
     setQuestionnaire((prev) => ({ ...prev, keyProfile: value }));
   };
 
+  const hasActiveFilters =
+    debouncedSearchTerm.trim().length > 0 ||
+    selectedManufacturers.length > 0 ||
+    selectedKeyTypes.length > 0 ||
+    inStockOnly ||
+    yearRangeValue[0] !== yearRangeBounds.min ||
+    yearRangeValue[1] !== yearRangeBounds.max;
+
   return (
     <Box component="main" sx={{ py: 6, bgcolor: 'background.default' }}>
       <Container maxWidth="lg">
@@ -620,85 +628,111 @@ const Catalog: React.FC = () => {
           </Typography>
         )}
         
-        {/* Product Grid */}
-        <Box sx={{ width: '100%' }}>
-          <ResponsiveGrid>
-          {keys.map((key) => (
-            <GridItem key={key.id}>
-              <ProductCard elevation={3}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={key.image}
-                  alt={key.title}
-                  sx={{ objectFit: 'contain', p: 2, bgcolor: '#f5f5f5' }}
-                />
-                <CardContent>
-                  <Typography variant="h6" component="h2" align="center" gutterBottom>
-                    {key.title}
-                  </Typography>
-                  
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent="center"
-                    sx={{
-                      mb: 2,
-                      flexWrap: 'wrap',
-                      rowGap: 1,
-                    }}
-                  >
-                    <Chip 
-                      label={key.type} 
-                      size="small" 
-                      color="primary" 
-                      variant="outlined"
+        {/* Product Grid / Empty State */}
+        {!isBootstrapping && !isLoading && keys.length === 0 ? (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              textAlign: 'center',
+              backgroundColor: 'background.paper',
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Nenhuma chave encontrada para os filtros selecionados.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Ajuste os filtros, altere a busca ou limpe os critérios para ver todos os modelos disponíveis.
+            </Typography>
+            {hasActiveFilters && (
+              <Button variant="outlined" onClick={resetFilters} startIcon={<FilterListIcon />}>
+                Limpar filtros
+              </Button>
+            )}
+          </Paper>
+        ) : (
+          <Box sx={{ width: '100%' }}>
+            <ResponsiveGrid>
+            {keys.map((key) => (
+              <GridItem key={key.id}>
+                <ProductCard elevation={3}>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={key.image}
+                    alt={key.title}
+                    sx={{ objectFit: 'contain', p: 2, bgcolor: '#f5f5f5' }}
+                  />
+                  <CardContent>
+                    <Typography variant="h6" component="h2" align="center" gutterBottom>
+                      {key.title}
+                    </Typography>
+                    
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      justifyContent="center"
                       sx={{
-                        height: 'auto',
-                        maxWidth: '100%',
-                        '& .MuiChip-label': {
-                          whiteSpace: 'normal',
-                          display: 'block',
-                          textAlign: 'center',
-                          py: 0.5,
-                        },
+                        mb: 2,
+                        flexWrap: 'wrap',
+                        rowGap: 1,
                       }}
-                    />
-                    <Chip 
-                      label={key.year} 
-                      size="small" 
-                      color="secondary" 
-                      variant="outlined" 
-                    />
-                  </Stack>
-                  
-                  <PriceTag align="center">
-                    {key.formattedPrice}
-                  </PriceTag>
-                  
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    color="success"
-                    startIcon={<WhatsAppIcon />}
-                    onClick={() => handleOpenQuestionnaire(key)}
-                    sx={{
-                      mt: 2,
-                      backgroundColor: '#25D366',
-                      '&:hover': {
-                        backgroundColor: '#128C7E',
-                      },
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    Solicitar Orçamento
-                  </Button>
-                </CardContent>
-              </ProductCard>
-            </GridItem>
-          ))}
-            </ResponsiveGrid>
-        </Box>
+                    >
+                      <Chip 
+                        label={key.type} 
+                        size="small" 
+                        color="primary" 
+                        variant="outlined"
+                        sx={{
+                          height: 'auto',
+                          maxWidth: '100%',
+                          '& .MuiChip-label': {
+                            whiteSpace: 'normal',
+                            display: 'block',
+                            textAlign: 'center',
+                            py: 0.5,
+                          },
+                        }}
+                      />
+                      <Chip 
+                        label={key.year} 
+                        size="small" 
+                        color="secondary" 
+                        variant="outlined" 
+                      />
+                    </Stack>
+                    
+                    <PriceTag align="center">
+                      {key.formattedPrice}
+                    </PriceTag>
+                    
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="success"
+                      startIcon={<WhatsAppIcon />}
+                      onClick={() => handleOpenQuestionnaire(key)}
+                      sx={{
+                        mt: 2,
+                        backgroundColor: '#25D366',
+                        '&:hover': {
+                          backgroundColor: '#128C7E',
+                        },
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Solicitar Orçamento
+                    </Button>
+                  </CardContent>
+                </ProductCard>
+              </GridItem>
+            ))}
+              </ResponsiveGrid>
+          </Box>
+        )}
       </Container>
 
       <Dialog open={questionnaireOpen} onClose={handleCloseQuestionnaire} fullWidth maxWidth="sm">
