@@ -44,7 +44,7 @@ Backend:
 
 Windows (PowerShell):
 
-```bash
+    ```bash
 npm install
 Copy-Item .env.example .env
 npm start
@@ -108,7 +108,7 @@ Padrao atual:
 
 Guia rapido: `docs/GIT_WORKFLOW.md`
 
-## Status atual
+## Status atual (03/04/2026)
 
 Concluido no Dia 1:
 - base backend FastAPI + healthcheck;
@@ -116,6 +116,21 @@ Concluido no Dia 1:
 - compose com ajustes de seguranca para ambiente local;
 - estabilizacao de testes do frontend.
 
-Proximo passo (Dia 2):
-- implementar endpoints REST de catalogo com filtros;
-- preparar integracao frontend com dados vindos da API.
+Concluido no Dia 2:
+- endpoints REST de catalogo implementados (`/api/keys`, `/api/keys/{id}`, `/api/manufacturers`, `/api/key-types`);
+- filtros operando no backend com dados reais.
+
+Concluido no Dia 3 (parcial):
+- catalogo frontend consumindo API real;
+- fluxo com loading, erro e atualizacao por filtros;
+- busca com debounce e sincronizacao de filtros com query params da API.
+
+Resta para fechar o Dia 3:
+- validar fluxo ponta a ponta com ambiente limpo (subir backend + frontend do zero e executar cenario de consulta completo);
+- revisar UX final dos filtros em mobile (expansao/colapso e legibilidade dos chips de selecao);
+- padronizar tratamento de estado vazio com mensagem orientativa ao usuario quando nenhum item for encontrado.
+
+Proximo foco (Dia 4):
+- testes backend com pytest;
+- ampliar testes frontend para fluxos essenciais de catalogo;
+- consolidar documentacao tecnica final para entrevista.
