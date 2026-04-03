@@ -204,15 +204,15 @@ const buildCatalogWhatsAppMessage = (key: AutomotiveKey, questionnaire: CatalogQ
   }
 
   const message = [
-    'Olá! Vim pelo catálogo e quero orçamento para esta chave:',
+    'Olá! Vim pelo catálogo e quero seguir com o atendimento desta chave:',
     '',
     `• Modelo selecionado: ${key.title}`,
     `• Marca: ${key.manufacturer}`,
     `• Tipo da chave no catálogo: ${key.type}`,
     `• Ano de referência: ${key.year} (faixa ${key.yearRange})`,
-    `• Valor de referência: ${key.formattedPrice}`,
+    `• Preço-base de referência: ${key.formattedPrice}`,
     '',
-    optionalAnswers.length > 0 ? 'Informações adicionais (opcional):' : 'Informações adicionais: cliente preferiu informar no atendimento.',
+    optionalAnswers.length > 0 ? 'Informações adicionais para triagem:' : 'Informações adicionais: cliente prefere informar no atendimento.',
     ...optionalAnswers,
     '',
   ].join('\n');
@@ -256,7 +256,7 @@ const buildEmptyStateWhatsAppMessage = (params: {
     : ['• Não encontrei sugestões próximas automáticas no momento.'];
 
   const message = [
-    'Olá! Não encontrei um resultado exato no catálogo e gostaria de ajuda com um orçamento.',
+    'Olá! Não encontrei um resultado exato no catálogo e gostaria de ajuda com a triagem do atendimento.',
     '',
     activeFilters.length > 0 ? 'Filtros usados:' : 'Filtros usados: nenhum filtro adicional informado.',
     ...activeFilters.map((item) => `• ${item}`),

@@ -7,11 +7,12 @@
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-Local-2496ED?logo=docker&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Em%20evolucao-orange)
 
-Projeto full stack em evolucao para catalogo de chaves automotivas e atendimento de orcamentos.
+Projeto full stack em evolucao para catalogo de chaves automotivas com precos-base e triagem de atendimento via WhatsApp.
 
 Objetivo tecnico atual:
 - estudar e consolidar fundamentos de engenharia de software;
 - evoluir frontend React para consumo de API real;
+- apresentar catalogo com base de precos e conduzir o cliente ao WhatsApp;
 - estruturar backend com FastAPI + PostgreSQL + testes.
 
 ## Stack
@@ -44,7 +45,7 @@ Backend:
 
 Windows (PowerShell):
 
-    ```bash
+```bash
 npm install
 Copy-Item .env.example .env
 npm start
@@ -92,12 +93,18 @@ Healthcheck: http://localhost:8000/health
 
 Consulte `backend/README.md`.
 
+Opcional para deploy/ambiente remoto:
+- setup com Supabase em `backend/SUPABASE_SETUP.md`
+
 ## Testes e build
 
 ```bash
 npm test -- --watchAll=false
 npm run build
 ```
+
+Testes do backend:
+- veja os comandos em `backend/README.md`
 
 ## Workflow Git
 
@@ -134,6 +141,9 @@ Concluido no Dia 4:
 - testes backend com pytest (fixtures, seed, 4 cenarios de teste);
 - testes frontend para fluxo de empty state inteligente com sugestoes;
 
+Pendente para fechar 100% do escopo planejado:
+- nenhum bloqueio funcional para o fluxo principal de atendimento; o fechamento do valor acontece no WhatsApp com validacao dos dados com o cliente.
+
 Status final:
 - ✓ Build frontend funciona
 - ✓ Testes frontend passam
@@ -142,3 +152,4 @@ Status final:
 - ✓ README tecnico completo com workflow Git e setup 
 - ✓ Comandos de setup
 - ✓ Historico Git organizado com commits semanticos
+- ✓ Fluxo principal orienta o cliente ao WhatsApp com base de preco e dados de triagem
