@@ -133,7 +133,6 @@ Resta para fechar o Dia 3:
 Concluido no Dia 4:
 - testes backend com pytest (fixtures, seed, 4 cenarios de teste);
 - testes frontend para fluxo de empty state inteligente com sugestoes;
-- documentacao tecnica final: decisoes de design, trade-offs, proximos passos (ver `docs/DECISOES_TECNICAS_DIA4.md`).
 
 Status final:
 - ✓ Build frontend funciona
