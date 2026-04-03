@@ -74,12 +74,17 @@ def client() -> TestClient:
         finally:
             db.close()
 
+    had_previous_override = get_db in app.dependency_overrides
+    previous_override = app.dependency_overrides.get(get_db) if had_previous_override else None
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as test_client:
         yield test_client
 
-    app.dependency_overrides.clear()
+    if had_previous_override:
+        app.dependency_overrides[get_db] = previous_override
+    else:
+        app.dependency_overrides.pop(get_db, None)
     Base.metadata.drop_all(bind=engine)
 
 
