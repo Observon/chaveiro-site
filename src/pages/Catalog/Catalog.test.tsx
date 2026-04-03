@@ -39,10 +39,6 @@ describe('Catalog empty state inteligente', () => {
     openSpy.mockRestore();
   });
 
-  afterAll(() => {
-    openSpy.mockRestore();
-  });
-
   test('exibe sugestoes proximas e CTA de WhatsApp quando nao ha resultados', async () => {
     const mockFetch = mockFetchSequence(
       [
