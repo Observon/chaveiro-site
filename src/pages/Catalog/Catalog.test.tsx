@@ -10,13 +10,11 @@ type MockResponse = {
 };
 
 const mockFetchSequence = (...responses: unknown[]) => {
-  const mockFetch = jest.fn<Promise<MockResponse>, [RequestInfo | URL]>().mockImplementation(() => {
-    const nextResponse = responses.shift();
+  const responsesCopy = [...responses];
+  const mockFetch = jest.fn<Promise<MockResponse>, [RequestInfo | URL]>().mockImplementation((url) => {
+    const nextResponse = responsesCopy.shift();
     if (nextResponse === undefined) {
-      return Promise.resolve({
-        ok: true,
-        json: async () => [],
-      });
+      throw new Error(`Unexpected fetch call to ${url}. All mocked responses exhausted.`);
     }
 
     return Promise.resolve({
