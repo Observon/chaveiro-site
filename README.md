@@ -139,7 +139,6 @@ Status final:
 - ✓ Testes frontend passam
 - ✓ Testes backend passam
 - ✓ API docs disponiveis em `/docs` (Swagger)
-- ✓ README tecnico completo com workflow Git, setup e decisoes
-- ✓ Comandos de setup funcionam do zero
+- ✓ README tecnico completo com workflow Git e setup 
+- ✓ Comandos de setup
 - ✓ Historico Git organizado com commits semanticos
-- ◐ Pitch de 2 minutos pronto (aplicar finalizacoes apos revisao)
