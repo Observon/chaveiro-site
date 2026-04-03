@@ -81,6 +81,11 @@ type AutomotiveKey = {
   inStock: boolean;
 };
 
+type EmptyStateAction = {
+  label: string;
+  onClick: () => void;
+};
+
 const DEFAULT_API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 const getApiBaseUrl = () => {
@@ -215,6 +220,93 @@ const buildCatalogWhatsAppMessage = (key: AutomotiveKey, questionnaire: CatalogQ
   return `https://wa.me/5521998063214?text=${encodeURIComponent(message)}`;
 };
 
+const buildEmptyStateWhatsAppMessage = (params: {
+  searchQuery: string;
+  selectedManufacturers: string[];
+  selectedKeyTypes: string[];
+  yearRangeValue: number[];
+  inStockOnly: boolean;
+  suggestions: AutomotiveKey[];
+}) => {
+  const { searchQuery, selectedManufacturers, selectedKeyTypes, yearRangeValue, inStockOnly, suggestions } = params;
+  const activeFilters: string[] = [];
+
+  if (searchQuery) {
+    activeFilters.push(`Busca: ${searchQuery}`);
+  }
+
+  if (selectedManufacturers.length > 0) {
+    activeFilters.push(`Fabricantes: ${selectedManufacturers.join(', ')}`);
+  }
+
+  if (selectedKeyTypes.length > 0) {
+    activeFilters.push(`Tipos: ${selectedKeyTypes.join(', ')}`);
+  }
+
+  if (yearRangeValue.length === 2) {
+    activeFilters.push(`Ano: ${yearRangeValue[0]} a ${yearRangeValue[1]}`);
+  }
+
+  if (inStockOnly) {
+    activeFilters.push('Somente em estoque');
+  }
+
+  const suggestionLines = suggestions.length > 0
+    ? suggestions.map((key) => `• ${key.title} - ${key.manufacturer} - ${key.type} - ${key.year}`)
+    : ['• Não encontrei sugestões próximas automáticas no momento.'];
+
+  const message = [
+    'Olá! Não encontrei um resultado exato no catálogo e gostaria de ajuda com um orçamento.',
+    '',
+    activeFilters.length > 0 ? 'Filtros usados:' : 'Filtros usados: nenhum filtro adicional informado.',
+    ...activeFilters.map((item) => `• ${item}`),
+    '',
+    'Se possível, me orientem com a melhor opção para o meu veículo.',
+  ].join('\n');
+
+  return `https://wa.me/5521998063214?text=${encodeURIComponent(message)}`;
+};
+
+const rankNearbyKeys = (
+  candidates: AutomotiveKey[],
+  selectedManufacturers: string[],
+  selectedKeyTypes: string[],
+  yearRangeValue: number[],
+) => {
+  const targetYear = Math.round((yearRangeValue[0] + yearRangeValue[1]) / 2);
+
+  return [...candidates]
+    .map((key) => {
+      let score = 0;
+
+      if (selectedManufacturers.includes(key.manufacturer)) {
+        score += 4;
+      }
+
+      if (selectedKeyTypes.includes(key.type)) {
+        score += 4;
+      }
+
+      const yearDistance = Math.abs(key.year - targetYear);
+      score += Math.max(0, 3 - Math.min(yearDistance, 3));
+
+      return { key, score, yearDistance };
+    })
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      if (left.yearDistance !== right.yearDistance) {
+        return left.yearDistance - right.yearDistance;
+      }
+
+      return left.key.title.localeCompare(right.key.title);
+    })
+    .slice(0, 3)
+    .map((item) => item.key);
+};
+
 const Catalog: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -232,6 +324,7 @@ const Catalog: React.FC = () => {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [nearbyKeys, setNearbyKeys] = useState<AutomotiveKey[]>([]);
   const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
   const [selectedKeyForContact, setSelectedKeyForContact] = useState<AutomotiveKey | null>(null);
   const [questionnaire, setQuestionnaire] = useState<CatalogQuestionnaire>(initialQuestionnaire);
@@ -351,6 +444,40 @@ const Catalog: React.FC = () => {
     };
   }, [debouncedSearchTerm, selectedManufacturers, selectedKeyTypes, yearRangeValue, inStockOnly, isInitialized]);
 
+  useEffect(() => {
+    if (!isInitialized || keys.length > 0) {
+      setNearbyKeys([]);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadNearbyKeys = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set('year_from', String(yearRangeBounds.min));
+        params.set('year_to', String(yearRangeBounds.max));
+
+        const response = await fetch(`${API_BASE_URL}/keys?${params.toString()}`, { signal: controller.signal });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as AutomotiveKey[];
+        setNearbyKeys(rankNearbyKeys(data, selectedManufacturers, selectedKeyTypes, yearRangeValue));
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') return;
+      }
+    };
+
+    loadNearbyKeys();
+
+    return () => {
+      controller.abort();
+    };
+  }, [isInitialized, keys.length, selectedManufacturers, selectedKeyTypes, yearRangeValue, yearRangeBounds.min, yearRangeBounds.max]);
+
   // Handle manufacturer selection
   const handleManufacturerChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
@@ -423,13 +550,76 @@ const Catalog: React.FC = () => {
     setQuestionnaire((prev) => ({ ...prev, keyProfile: value }));
   };
 
+  const searchQuery = debouncedSearchTerm.trim();
   const hasActiveFilters =
-    debouncedSearchTerm.trim().length > 0 ||
+    searchQuery.length > 0 ||
     selectedManufacturers.length > 0 ||
     selectedKeyTypes.length > 0 ||
     inStockOnly ||
     yearRangeValue[0] !== yearRangeBounds.min ||
     yearRangeValue[1] !== yearRangeBounds.max;
+
+  const emptyStateTitle = (() => {
+    if (searchQuery) {
+      return `Nenhum resultado para "${searchQuery}".`;
+    }
+
+    if (selectedManufacturers.length > 0 || selectedKeyTypes.length > 0 || inStockOnly) {
+      return 'Os filtros atuais ficaram muito restritivos.';
+    }
+
+    if (yearRangeValue[0] !== yearRangeBounds.min || yearRangeValue[1] !== yearRangeBounds.max) {
+      return 'Não encontramos itens nessa faixa de ano.';
+    }
+
+    return 'Nenhuma chave disponível no momento.';
+  })();
+
+  const emptyStateDescription = (() => {
+    if (searchQuery) {
+      return 'Tente um nome de modelo, fabricante ou remova a busca para ampliar os resultados.';
+    }
+
+    if (selectedManufacturers.length > 0 || selectedKeyTypes.length > 0 || inStockOnly) {
+      return 'Experimente remover um filtro por vez para identificar qual combinação está limitando a busca.';
+    }
+
+    if (yearRangeValue[0] !== yearRangeBounds.min || yearRangeValue[1] !== yearRangeBounds.max) {
+      return 'Amplie o intervalo de anos para incluir mais modelos no catálogo.';
+    }
+
+    return 'Ajuste os filtros ou tente novamente em instantes.';
+  })();
+
+  const emptyStateActions: Array<EmptyStateAction> = [
+    searchQuery
+      ? { label: 'Limpar busca', onClick: () => setSearchTerm('') }
+      : null,
+    selectedManufacturers.length > 0
+      ? { label: 'Remover fabricantes', onClick: () => setSelectedManufacturers([]) }
+      : null,
+    selectedKeyTypes.length > 0
+      ? { label: 'Remover tipos', onClick: () => setSelectedKeyTypes([]) }
+      : null,
+    yearRangeValue[0] !== yearRangeBounds.min || yearRangeValue[1] !== yearRangeBounds.max
+      ? {
+          label: 'Ampliar anos',
+          onClick: () => setYearRangeValue([yearRangeBounds.min, yearRangeBounds.max]),
+        }
+      : null,
+    inStockOnly
+      ? { label: 'Mostrar sem estoque', onClick: () => setInStockOnly(false) }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; onClick: () => void }>;
+
+  const emptyStateWhatsAppUrl = buildEmptyStateWhatsAppMessage({
+    searchQuery,
+    selectedManufacturers,
+    selectedKeyTypes,
+    yearRangeValue,
+    inStockOnly,
+    suggestions: nearbyKeys,
+  });
 
   return (
     <Box component="main" sx={{ py: 6, bgcolor: 'background.default' }}>
@@ -642,16 +832,75 @@ const Catalog: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-              Nenhuma chave encontrada para os filtros selecionados.
+              {emptyStateTitle}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Ajuste os filtros, altere a busca ou limpe os critérios para ver todos os modelos disponíveis.
+              {emptyStateDescription}
             </Typography>
-            {hasActiveFilters && (
-              <Button variant="outlined" onClick={resetFilters} startIcon={<FilterListIcon />}>
-                Limpar filtros
-              </Button>
+            {nearbyKeys.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold' }}>
+                  Modelos próximos que podem ajudar
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} useFlexGap flexWrap="wrap">
+                  {nearbyKeys.map((key) => (
+                    <Paper
+                      key={key.id}
+                      elevation={0}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        minWidth: { xs: '100%', sm: 220 },
+                        flex: '1 1 220px',
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        {key.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                        {key.manufacturer} • {key.type} • {key.year}
+                      </Typography>
+                      <Button
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleOpenQuestionnaire(key)}
+                      >
+                        Solicitar orçamento
+                      </Button>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
             )}
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="center">
+              {emptyStateActions.map((action) => (
+                <Button key={action.label} variant="outlined" onClick={action.onClick} startIcon={<FilterListIcon />}>
+                  {action.label}
+                </Button>
+              ))}
+              {hasActiveFilters && (
+                <Button variant="contained" onClick={resetFilters} startIcon={<FilterListIcon />}>
+                  Limpar tudo
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<WhatsAppIcon />}
+                onClick={() => window.open(emptyStateWhatsAppUrl, '_blank', 'noopener,noreferrer')}
+                sx={{
+                  backgroundColor: '#25D366',
+                  '&:hover': {
+                    backgroundColor: '#128C7E',
+                  },
+                }}
+              >
+                Falar no WhatsApp
+              </Button>
+            </Stack>
           </Paper>
         ) : (
           <Box sx={{ width: '100%' }}>
