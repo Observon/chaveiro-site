@@ -74,11 +74,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd backend
 # Ativar venv se não estiver ativo
-.venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 # Instalar dependências de dev (inclui pytest, httpx)
 pip install -r requirements-dev.txt
 # Rodar testes
 pytest tests -q
+```
+
+Se houver bloqueio de script no PowerShell, execute antes:
+
+```bash
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
 ### macOS / Linux (POSIX shell)
