@@ -130,7 +130,16 @@ Resta para fechar o Dia 3:
 - revisar UX final dos filtros em mobile (expansao/colapso e legibilidade dos chips de selecao);
 - padronizar tratamento de estado vazio com mensagem orientativa ao usuario quando nenhum item for encontrado.
 
-Proximo foco (Dia 4):
-- testes backend com pytest;
-- ampliar testes frontend para fluxos essenciais de catalogo;
-- consolidar documentacao tecnica final para entrevista.
+Concluido no Dia 4:
+- testes backend com pytest (fixtures, seed, 4 cenarios de teste);
+- testes frontend para fluxo de empty state inteligente com sugestoes;
+
+Status final:
+- ✓ Build frontend funciona
+- ✓ Testes frontend passam
+- ✓ Testes backend passam
+- ✓ API docs disponiveis em `/docs` (Swagger)
+- ✓ README tecnico completo com workflow Git, setup e decisoes
+- ✓ Comandos de setup funcionam do zero
+- ✓ Historico Git organizado com commits semanticos
+- ◐ Pitch de 2 minutos pronto (aplicar finalizacoes apos revisao)

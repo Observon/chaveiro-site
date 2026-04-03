@@ -68,3 +68,31 @@ pip install -r requirements.txt
 cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+## Rodar testes (desenvolvimento)
+### Windows (PowerShell)
+```bash
+cd backend
+# Ativar venv se não estiver ativo
+.venv\Scripts\Activate.ps1
+# Instalar dependências de dev (inclui pytest, httpx)
+pip install -r requirements-dev.txt
+# Rodar testes
+pytest tests -q
+```
+
+Se houver bloqueio de script no PowerShell, execute antes:
+
+```bash
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+### macOS / Linux (POSIX shell)
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest tests -q
+```
+
+**Note:** `requirements-dev.txt` inclui todas as dependências de produção (`requirements.txt`) mais as de teste (pytest, httpx). Use este arquivo apenas em ambientes de desenvolvimento e CI.
