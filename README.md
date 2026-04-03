@@ -7,12 +7,12 @@
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-Local-2496ED?logo=docker&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Em%20evolucao-orange)
 
-Projeto full stack em evolucao para catalogo de chaves automotivas com precos-base e triagem de atendimento via WhatsApp.
+Projeto full stack em evolucao para catalogo de chaves automotivas com precos-base e triagem de atendimento humano via WhatsApp.
 
 Objetivo tecnico atual:
 - estudar e consolidar fundamentos de engenharia de software;
 - evoluir frontend React para consumo de API real;
-- apresentar catalogo com base de precos e conduzir o cliente ao WhatsApp;
+- apresentar catalogo com base de precos e conduzir o cliente ao WhatsApp para triagem humana;
 - estruturar backend com FastAPI + PostgreSQL + testes.
 
 ## Stack
@@ -152,4 +152,4 @@ Status final:
 - ✓ README tecnico completo com workflow Git e setup 
 - ✓ Comandos de setup
 - ✓ Historico Git organizado com commits semanticos
-- ✓ Fluxo principal orienta o cliente ao WhatsApp com base de preco e dados de triagem
+- ✓ Fluxo principal orienta o cliente ao WhatsApp com preco-base e triagem humana para fechamento do atendimento

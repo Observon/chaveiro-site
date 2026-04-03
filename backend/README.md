@@ -40,6 +40,10 @@ Servicos:
 - Swagger: http://localhost:8000/docs
 - PostgreSQL: localhost:5432
 
+Fluxo comercial principal:
+- o catalogo mostra preco-base de referencia;
+- a triagem e a confirmacao do valor final acontecem no WhatsApp com atendimento humano.
+
 ## Endpoints atuais
 - GET /health
 - GET /api/manufacturers
