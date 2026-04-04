@@ -45,6 +45,7 @@ def list_key_types(request: Request, db: Session = Depends(get_db)):
 @limiter.limit("60/minute")
 def list_keys(
     request: Request,
+    response: Response,
     search: str | None = None,
     manufacturer: list[str] = Query(default=[]),
     key_type: list[str] = Query(default=[]),
@@ -57,7 +58,6 @@ def list_keys(
     page_size: int = Query(default=12, ge=1, le=100),
     sort_by: Literal["title", "price", "year"] = Query(default="title"),
     sort_dir: Literal["asc", "desc"] = Query(default="asc"),
-    response: Response = None,
     db: Session = Depends(get_db),
 ):
     query = (
@@ -131,14 +131,13 @@ def list_keys(
     except SQLAlchemyError as exc:
         raise APIError("database_error", "Database unavailable", 503) from exc
 
-    if response is not None:
-        total_pages = max(1, (total_items + page_size - 1) // page_size)
-        response.headers["X-Total-Count"] = str(total_items)
-        response.headers["X-Page"] = str(page)
-        response.headers["X-Page-Size"] = str(page_size)
-        response.headers["X-Total-Pages"] = str(total_pages)
-        response.headers["X-Sort-By"] = sort_by
-        response.headers["X-Sort-Dir"] = sort_dir
+    total_pages = max(1, (total_items + page_size - 1) // page_size)
+    response.headers["X-Total-Count"] = str(total_items)
+    response.headers["X-Page"] = str(page)
+    response.headers["X-Page-Size"] = str(page_size)
+    response.headers["X-Total-Pages"] = str(total_pages)
+    response.headers["X-Sort-By"] = sort_by
+    response.headers["X-Sort-Dir"] = sort_dir
 
     return [
         KeyListItem(
