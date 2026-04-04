@@ -281,15 +281,14 @@ def test_secondary_sort_by_id_provides_stability(client: TestClient) -> None:
     assert [item["id"] for item in tied_items] == sorted(tied_ids)
 
 
-def test_list_keys_search_with_special_characters(client: TestClient) -> None:
-    """Test searching with special characters (SQLAlchemy escapes/handles them)."""
-    # Search with wildcard character - in SQL LIKE, % matches any string
-    # So this will match all items if the string contains '%' when escaped or literal '%'
+def test_list_keys_search_with_no_matching_term(client: TestClient) -> None:
+    """Test searching with a plain term that does not match any seeded items."""
+    # Search for a regular term that is absent from the test data.
     response = client.get("/api/keys", params={"search": "x"})
     
     assert response.status_code == 200
     payload = response.json()
-    # Searching for 'x' should not match any items (no 'x' in our test data)
+    # Searching for 'x' should not match any items in our test data.
     assert len(payload) == 0
 
 
