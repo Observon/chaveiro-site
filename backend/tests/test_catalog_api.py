@@ -254,12 +254,11 @@ def test_list_keys_search_with_special_characters(client: TestClient) -> None:
 
 
 def test_list_keys_pagination_max_page_size_limit(client: TestClient) -> None:
-    """Test that page_size cannot exceed maximum limit (100)."""
-    # Request more than max allowed
+    """Test that page_size above the maximum limit is rejected with validation error."""
+    # Request more than the max allowed by the route constraint (le=100)
     response = client.get("/api/keys", params={"page_size": 200})
-    
-    # Should fail validation or be capped to 100
-    assert response.status_code in [200, 422]  # 422 if validation fails
+
+    assert response.status_code == 422
 
 
 def test_list_keys_pagination_edge_case_first_page(client: TestClient) -> None:
