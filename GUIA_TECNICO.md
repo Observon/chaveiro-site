@@ -184,11 +184,9 @@ Entregaveis do dia:
 - projeto defendivel em entrevista junior
 - documentacao pronta para recrutador
 
-## Dia 5 - Candidatura e apresentacao 
+## Dia 5 - Planejado
 - revisar README e links
 - validar comandos de setup do zero
-- preparar pitch de 2 minutos
-- preparar respostas sobre uso de IA
 
 ---
 

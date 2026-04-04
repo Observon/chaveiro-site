@@ -46,11 +46,21 @@ Fluxo comercial principal:
 
 ## Endpoints atuais
 - GET /health
-- GET /api/manufacturers
-- GET /api/key-types
-- GET /api/keys
-	- filtros: `search`, `manufacturer`, `key_type`, `year_from`, `year_to`, `in_stock`
-- GET /api/keys/{key_id}
+- GET /api/manufacturers (rate limited: 30 req/min)
+- GET /api/key-types (rate limited: 30 req/min)
+- GET /api/keys (rate limited: 60 req/min)
+	- filtros: `search`, `manufacturer`, `key_type`, `year_from`, `year_to`, `price_from`, `price_to`, `in_stock`
+	- paginacao: `page`, `page_size`
+	- ordenacao: `sort_by` (`title|price|year`), `sort_dir` (`asc|desc`)
+	- resposta: metadados de paginacao em headers (`X-Total-Count`, `X-Page`, `X-Page-Size`, `X-Total-Pages`, `X-Sort-By`, `X-Sort-Dir`)
+- GET /api/keys/{key_id} (rate limited: 60 req/min)
+
+## Melhorias de qualidade implementadas
+- **Formato padronizado de erro**: Todos os erros retornam `{"error": "<error_type>", "detail": "<message>", "status_code": <code>}`
+- **Rate limiting**: Proteção contra abuso com slowapi (30-60 requisições/minuto por endpoint)
+- **Filtros de preço**: Suporta `price_from` e `price_to` para filtrar por intervalo de preço
+- **Ordenação estável**: Ordenação secundária por ID garante resultados consistentes
+- **Cobertura de testes**: 15 testes cobrindo paginação, filtros, ordenação, casos extremos e tratamento de erros
 
 ## Rodar local sem Docker
 ### Windows (PowerShell)
