@@ -4,7 +4,7 @@ import sys
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -227,18 +227,58 @@ def test_list_keys_sorting_by_year_asc(client: TestClient) -> None:
 
 def test_secondary_sort_by_id_provides_stability(client: TestClient) -> None:
     """Test that secondary sorting by ID provides stable results when primary sort value is identical."""
-    # If we add two items with the same price, they should be sorted by ID as secondary key
+    db_provider = app.dependency_overrides.get(get_db, get_db)
+    db_gen = db_provider()
+    db = next(db_gen)
+
+    try:
+        template_key = db.scalars(select(AutomotiveKey).limit(1)).first()
+        assert template_key is not None
+
+        tied_price = Decimal("250.00")
+        first_key = AutomotiveKey(
+            title="Chave Empate Preco A",
+            manufacturer_id=template_key.manufacturer_id,
+            key_type_id=template_key.key_type_id,
+            year=template_key.year,
+            year_range=template_key.year_range,
+            price=tied_price,
+            in_stock=template_key.in_stock,
+            image_url=template_key.image_url,
+        )
+        second_key = AutomotiveKey(
+            title="Chave Empate Preco B",
+            manufacturer_id=template_key.manufacturer_id,
+            key_type_id=template_key.key_type_id,
+            year=template_key.year,
+            year_range=template_key.year_range,
+            price=tied_price,
+            in_stock=template_key.in_stock,
+            image_url=template_key.image_url,
+        )
+        db.add_all([first_key, second_key])
+        db.commit()
+        db.refresh(first_key)
+        db.refresh(second_key)
+    finally:
+        db.close()
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
     response = client.get("/api/keys", params={"sort_by": "price", "sort_dir": "asc"})
-    
+
     assert response.status_code == 200
     payload = response.json()
-    # With 2 items, we can verify ordering is consistent (even if price values differ)
-    assert len(payload) == 2
-    assert "id" in payload[0]
-    assert "id" in payload[1]
-    # Verify items have valid IDs
-    assert payload[0]["id"] > 0
-    assert payload[1]["id"] > 0
+    assert len(payload) >= 4
+
+    tied_ids = {first_key.id, second_key.id}
+    tied_items = [item for item in payload if item["id"] in tied_ids]
+
+    assert len(tied_items) == 2
+    assert tied_items[0]["price"] == tied_items[1]["price"]
+    assert [item["id"] for item in tied_items] == sorted(tied_ids)
 
 
 def test_list_keys_search_with_special_characters(client: TestClient) -> None:
