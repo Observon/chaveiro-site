@@ -298,6 +298,10 @@ def test_list_keys_pagination_max_page_size_limit(client: TestClient) -> None:
     response = client.get("/api/keys", params={"page_size": 200})
 
     assert response.status_code == 422
+    payload = response.json()
+    assert payload["error"] == "validation_error"
+    assert isinstance(payload["detail"], list)
+    assert payload["status_code"] == 422
 
 
 def test_list_keys_pagination_edge_case_first_page(client: TestClient) -> None:
@@ -325,3 +329,13 @@ def test_list_keys_empty_result_set(client: TestClient) -> None:
     assert len(payload) == 0
     assert response.headers["x-total-count"] == "0"
     assert response.headers["x-total-pages"] == "1"
+
+
+def test_unknown_route_returns_standardized_http_error(client: TestClient) -> None:
+    response = client.get("/rota-inexistente")
+
+    assert response.status_code == 404
+    payload = response.json()
+    assert payload["error"] == "http_error"
+    assert payload["detail"] == "Not Found"
+    assert payload["status_code"] == 404
