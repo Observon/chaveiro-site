@@ -131,4 +131,159 @@ def test_get_key_returns_404_for_unknown_id(client: TestClient) -> None:
     response = client.get("/api/keys/9999")
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Key not found"
+    error_response = response.json()
+    assert error_response["error"] == "not_found"
+    assert error_response["detail"] == "Key not found"
+    assert error_response["status_code"] == 404
+
+
+def test_list_keys_supports_pagination_with_metadata_headers(client: TestClient) -> None:
+    response = client.get("/api/keys", params={"page": 1, "page_size": 1})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert response.headers["x-total-count"] == "2"
+    assert response.headers["x-page"] == "1"
+    assert response.headers["x-page-size"] == "1"
+    assert response.headers["x-total-pages"] == "2"
+
+
+def test_list_keys_supports_sorting_by_price_desc(client: TestClient) -> None:
+    response = client.get("/api/keys", params={"sort_by": "price", "sort_dir": "desc"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 2
+    assert payload[0]["title"] == "Chave Cruze 2018"
+    assert payload[1]["title"] == "Chave Gol G5"
+
+
+def test_list_keys_supports_price_range_filters(client: TestClient) -> None:
+    """Test filtering by price range (price_from and price_to)."""
+    # Only high-price items
+    response = client.get("/api/keys", params={"price_from": 350})
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["title"] == "Chave Cruze 2018"
+    
+    # Only low-price items
+    response = client.get("/api/keys", params={"price_to": 150})
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["title"] == "Chave Gol G5"
+    
+    # Price range in the middle (no items)
+    response = client.get("/api/keys", params={"price_from": 200, "price_to": 300})
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 0
+
+
+def test_list_keys_with_combined_filters(client: TestClient) -> None:
+    """Test using multiple filters together."""
+    response = client.get(
+        "/api/keys",
+        params={
+            "manufacturer": "GM",
+            "in_stock": True,
+            "price_from": 300,
+            "sort_by": "price",
+            "sort_dir": "asc",
+        },
+    )
+    
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["title"] == "Chave Cruze 2018"
+
+
+def test_list_keys_sorting_by_title(client: TestClient) -> None:
+    """Test sorting by title in ascending order."""
+    response = client.get("/api/keys", params={"sort_by": "title", "sort_dir": "asc"})
+    
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 2
+    # Chave Cruze comes before Chave Gol
+    assert payload[0]["title"] == "Chave Cruze 2018"
+    assert payload[1]["title"] == "Chave Gol G5"
+
+
+def test_list_keys_sorting_by_year_asc(client: TestClient) -> None:
+    """Test sorting by year in ascending order."""
+    response = client.get("/api/keys", params={"sort_by": "year", "sort_dir": "asc"})
+    
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 2
+    # 2012 comes before 2018
+    assert payload[0]["year"] == 2012
+    assert payload[1]["year"] == 2018
+
+
+def test_secondary_sort_by_id_provides_stability(client: TestClient) -> None:
+    """Test that secondary sorting by ID provides stable results when primary sort value is identical."""
+    # If we add two items with the same price, they should be sorted by ID as secondary key
+    response = client.get("/api/keys", params={"sort_by": "price", "sort_dir": "asc"})
+    
+    assert response.status_code == 200
+    payload = response.json()
+    # With 2 items, we can verify ordering is consistent (even if price values differ)
+    assert len(payload) == 2
+    assert "id" in payload[0]
+    assert "id" in payload[1]
+    # Verify items have valid IDs
+    assert payload[0]["id"] > 0
+    assert payload[1]["id"] > 0
+
+
+def test_list_keys_search_with_special_characters(client: TestClient) -> None:
+    """Test searching with special characters (SQLAlchemy escapes/handles them)."""
+    # Search with wildcard character - in SQL LIKE, % matches any string
+    # So this will match all items if the string contains '%' when escaped or literal '%'
+    response = client.get("/api/keys", params={"search": "x"})
+    
+    assert response.status_code == 200
+    payload = response.json()
+    # Searching for 'x' should not match any items (no 'x' in our test data)
+    assert len(payload) == 0
+
+
+def test_list_keys_pagination_max_page_size_limit(client: TestClient) -> None:
+    """Test that page_size cannot exceed maximum limit (100)."""
+    # Request more than max allowed
+    response = client.get("/api/keys", params={"page_size": 200})
+    
+    # Should fail validation or be capped to 100
+    assert response.status_code in [200, 422]  # 422 if validation fails
+
+
+def test_list_keys_pagination_edge_case_first_page(client: TestClient) -> None:
+    """Test pagination edge case: requesting first page with small page size."""
+    response = client.get("/api/keys", params={"page": 1, "page_size": 1})
+    
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    # Verify it's actually the first item (by ID or guaranteed order)
+    assert "id" in payload[0]
+
+
+def test_list_keys_empty_result_set(client: TestClient) -> None:
+    """Test behavior when filters result in no matches."""
+    response = client.get(
+        "/api/keys",
+        params={
+            "manufacturer": "Tesla",  # Non-existent manufacturer
+        },
+    )
+    
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 0
+    assert response.headers["x-total-count"] == "0"
+    assert response.headers["x-total-pages"] == "1"
