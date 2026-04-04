@@ -30,3 +30,6 @@ backend/.mypy_cache/
 backend/.ruff_cache/
 backend/.env
 *.pyc
+
+#others
+GUIA_TECNICO_JUNIOR.md
