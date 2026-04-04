@@ -1,6 +1,13 @@
 from pydantic import BaseModel
 
 
+class ErrorResponse(BaseModel):
+    """Standardized error response format."""
+    error: str
+    detail: str
+    status_code: int
+
+
 class KeyListItem(BaseModel):
     id: int
     title: str
